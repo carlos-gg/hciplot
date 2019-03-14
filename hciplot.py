@@ -2,8 +2,8 @@ import holoviews as hv
 from holoviews import opts
 
 __author__ = 'Carlos Alberto Gomez Gonzalez'
-__all__ = ['plot2d',
-           'plot3d']
+__all__ = ['plot_frames',
+           'plot_cubes']
 
 import os
 import shutil
@@ -31,11 +31,11 @@ hv.extension('bokeh', 'matplotlib')
 hciplot_cmap = 'viridis'
 
 
-def plot3d(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
-           vmin=None, vmax=None, size=145, width=350, height=300,
-           cmap=None, colorbar=True, dynamic=True, anim_path=None,
-           data_step_range=None, label=None, label_step_range=None, delay=50,
-           anim_format='gif', **kwargs):
+def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
+               vmin=None, vmax=None, size=145, width=350, height=300,
+               cmap=None, colorbar=True, dynamic=True, anim_path=None,
+               data_step_range=None, label=None, label_step_range=None,
+               delay=50, anim_format='gif', **kwargs):
     """ Plot multi-dimensional high-contrast imaging datacubes (3d and 4d numpy
     arrays). It allows to visualize in-memory numpy arrays on Jupyterlab by
     leveraging the HoloViews library. It can also generate matplotlib animations
@@ -219,15 +219,15 @@ def plot3d(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
         raise ValueError("`mode` is not recognized")
 
 
-def plot2d(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
-           circle_alpha=0.8, circle_color='white', circle_radius=6,
-           circle_label=False, arrow=None, arrow_alpha=0.8, arrow_length=20,
-           arrow_shiftx=5, label=None, label_pad=5, label_size=12, grid=False,
-           grid_alpha=0.4, grid_color='#f7f7f7', grid_spacing=None, cross=None,
-           cross_alpha=0.4, ang_scale=False, ang_ticksep=50, pxscale=0.01,
-           axis=True, show_center=False, cmap=None, log=False, colorbar=True,
-           dpi=80, spsize=6, horsp=0.4, versp=0.2, title=None, sampling=1,
-           save=False):
+def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
+                circle_alpha=0.8, circle_color='white', circle_radius=6,
+                circle_label=False, arrow=None, arrow_alpha=0.8,
+                arrow_length=20, arrow_shiftx=5, label=None, label_pad=5,
+                label_size=12, grid=False, grid_alpha=0.4, grid_color='#f7f7f7',
+                grid_spacing=None, cross=None, cross_alpha=0.4, ang_scale=False,
+                ang_ticksep=50, pxscale=0.01, axis=True, show_center=False,
+                cmap=None, log=False, colorbar=True, dpi=80, spsize=6,
+                horsp=0.4, versp=0.2, title=None, sampling=1, save=False):
     """ Wrapper for easy creation of pyplot subplots. It is convenient for
     displaying VIP images in jupyter notebooks.
 
