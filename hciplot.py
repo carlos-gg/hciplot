@@ -31,11 +31,6 @@ hv.extension('bokeh', 'matplotlib')
 hciplot_cmap = 'viridis'
 
 
-def cube_plot(cube, backend='bokeh', dpi=80, figtype='png', vmin=None,
-              vmax=None, size=145, width=350, height=300, cmap='viridis',
-              colorbar=True, dynamic=True):
-    """ Wrapper of HoloViews library for the visualization of multi-dimensional
-    high-contrast imaging datacubes (in-memory numpy arrays) on Jupyterlab.
 def plot3d(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
            vmin=None, vmax=None, size=145, width=350, height=300,
            cmap=None, colorbar=True, dynamic=True, anim_path=None,
@@ -50,6 +45,11 @@ def plot3d(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
     ----------
     cube : np.ndarray
         Input cube.
+    mode : {'slider', 'animation'}, str optional
+        Whether to plot the 3d array as a widget with a slider or to save an
+        animation of the 3d array. The animation is saved to disk using
+        ImageMagick's convert command (it must be installed otherwise a
+         ``FileNotFoundError`` will be raised)
     dpi : int, optional
         [backend='matplotlib'] The rendered dpi of the figure.
     figtype : {'png', 'svg'}, str optional
@@ -70,13 +70,37 @@ def plot3d(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
         When False, a HoloMap is created (slower and will take up a lot of RAM
         for large datasets). If True, a DynamicMap is created instead.
         
+    anim_fname : str, optional
+        The animation path/filename. If None then the animation will be called
+        ``animation``.``anim_format`` and will be saved in the current
+        directory.
+    data_step_range : tuple, optional
+        Tuple of 1, 2 or 3 values that creates a range for slicing the ``data``
+        cube.
+    label : str, optional
+        Label to be overlaid on top of each frame of the animation. If None,
+        then 'frame #' will be used.
+    labelpad : int, optional
+        Padding of the label from the left bottom corner. 10 by default.
+    label_step_range : tuple, optional
+        Tuple of 1, 2 or 3 values that creates a range for customizing the label
+        overlaid on top of the image.
+    delay : int, optional
+        Delay for displaying the frames in the animation sequence.
+    anim_format : str, optional
+        Format of the saved animation. By default 'gif' is used. Other formats
+        supported by ImageMagick are valid, such as 'mp4'.
+    **kwargs : dictionary, optional
+        Arguments to be passed to ``plot_2d`` to customize the plot.
+
+
     Notes
     -----
     http://holoviews.org/getting_started/Gridded_Datasets.html
     http://holoviews.org/user_guide/Gridded_Datasets.html
     http://holoviews.org/user_guide/Applying_Customizations.html
 
-    # Colorbar and aspect ratio:
+    Colorbar and aspect ratio issue when backend=bokeh:
     https://github.com/pyviz/holoviews/issues/236
     """
     if cmap is None:
