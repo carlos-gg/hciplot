@@ -7,9 +7,9 @@ hv.extension('bokeh', 'matplotlib')
 def cube_plot(cube, backend='bokeh', dpi=80, figtype='png', vmin=None,
               vmax=None, size=145, width=350, height=300, cmap='viridis',
               colorbar=True, dynamic=True):
-    """ Wrapper HoloViews for the visualization of multi-dimensional
-    high-contrast imaging datacubes on Jupyterlab.
-    
+    """ Wrapper of HoloViews library for the visualization of multi-dimensional
+    high-contrast imaging datacubes (in-memory numpy arrays) on Jupyterlab.
+
     Parameters
     ----------
     cube : np.ndarray
