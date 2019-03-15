@@ -98,9 +98,6 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
     http://holoviews.org/getting_started/Gridded_Datasets.html
     http://holoviews.org/user_guide/Gridded_Datasets.html
     http://holoviews.org/user_guide/Applying_Customizations.html
-
-    Colorbar and aspect ratio issue when backend=bokeh:
-    https://github.com/pyviz/holoviews/issues/236
     """
     if cmap is None:
         cmap = hciplot_cmap
@@ -205,8 +202,8 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
             if label is None:
                 label = 'frame '
             savelabel = dir_path + label + str(i + 100)
-            plot2d(cube[i], save=savelabel, label=[label + str(labstep + 1)],
-                   **kwargs)
+            plot_frames(cube[i], save=savelabel, label=[label + str(labstep + 1)],
+                        **kwargs)
         try:
             filename = anim_path + '.' + anim_format
             Popen(['convert', '-delay', str(delay), dir_path + '*.png',
