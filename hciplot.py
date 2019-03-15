@@ -1,6 +1,3 @@
-import holoviews as hv
-from holoviews import opts
-
 __author__ = 'Carlos Alberto Gomez Gonzalez'
 __all__ = ['plot_frames',
            'plot_cubes']
@@ -8,17 +5,19 @@ __all__ = ['plot_frames',
 import os
 import shutil
 import numpy as np
-from subprocess import Popen
+import holoviews as hv
+from holoviews import opts
+from subprocess import call
 from matplotlib.pyplot import figure, subplot, show, Circle, savefig, close
 from matplotlib.pyplot import colorbar as mplcbar
-import matplotlib.colors as colors
-import matplotlib.cm as mplcm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.cm import register_cmap
+import matplotlib.colors as colors
+import matplotlib.cm as mplcm
 
 
-# Registering heat and cool colormaps from DS9
-# taken from: https://gist.github.com/adonath/c9a97d2f2d964ae7b9eb
+# Registering heat and cool colormaps from SaoImage DS9
+# borrowed from: https://gist.github.com/adonath/c9a97d2f2d964ae7b9eb
 ds9cool = {'red': lambda v: 2 * v - 1,
            'green': lambda v: 2 * v - 0.5,
            'blue': lambda v: 2 * v}
@@ -27,15 +26,15 @@ ds9heat = {'red': lambda v: np.interp(v, [0, 0.34, 1], [0, 1, 1]),
            'blue': lambda v: np.interp(v, [0, 0.65, 0.98, 1], [0, 0, 1, 1])}
 register_cmap('ds9cool', data=ds9cool)
 register_cmap('ds9heat', data=ds9heat)
+default_cmap = 'viridis'
 hv.extension('bokeh', 'matplotlib')
-hciplot_cmap = 'viridis'
 
 
 def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
                vmin=None, vmax=None, size=145, width=350, height=300,
                cmap=None, colorbar=True, dynamic=True, anim_path=None,
                data_step_range=None, label=None, label_step_range=None,
-               delay=50, anim_format='gif', **kwargs):
+               delay=50, anim_format='gif', delete_anim_cache=True, **kwargs):
     """ Plot multi-dimensional high-contrast imaging datacubes (3d and 4d numpy
     arrays). It allows to visualize in-memory numpy arrays on Jupyterlab by
     leveraging the HoloViews library. It can also generate matplotlib animations
@@ -100,7 +99,7 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
     http://holoviews.org/user_guide/Applying_Customizations.html
     """
     if cmap is None:
-        cmap = hciplot_cmap
+        cmap = default_cmap
 
     if mode == 'slider':
         if cube.ndim == 3:
@@ -144,6 +143,8 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
             options += " clims=("+str(vmin)+','+str(vmax)+")"+")"
             opts(options, image_stack)
             return image_stack.opts(opts.Image(colorbar=colorbar))
+            # hv.save(image_stack, 'holomap.gif', fps=5)
+
         elif backend == 'bokeh':
             options = "Image (cmap='" + cmap + "')"
             opts(options, image_stack)
@@ -157,6 +158,8 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
         if not (isinstance(cube, np.ndarray) and cube.ndim == 3):
             raise TypeError('Only 3d numpy arrays are accepted when '
                             '`mode`=`animation`')
+        if backend == 'bokeh':
+            print('Creating animations works with the matplotlib backend')
 
         dir_path = './animation_temp/'
         if anim_path is None:
@@ -198,17 +201,24 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
             print('Replacing ' + dir_path)
         os.mkdir(dir_path)
 
+        print('Producing each animation frame...')
         for i, labstep in zip(data_step_range, list(label_step_range)):
             if label is None:
                 label = 'frame '
             savelabel = dir_path + label + str(i + 100)
-            plot_frames(cube[i], save=savelabel, label=[label + str(labstep + 1)],
-                        **kwargs)
+            plot_frames(cube[i], save=savelabel, dpi=dpi, vmin=vmin, vmax=vmax,
+                        colorbar=colorbar, cmap=cmap,
+                        label=[label + str(labstep + 1)], **kwargs)
         try:
             filename = anim_path + '.' + anim_format
-            Popen(['convert', '-delay', str(delay), dir_path + '*.png',
-                   filename])
-            print('Animation successfully saved to disk as ' + filename)
+            call(['convert', '-delay', str(delay), dir_path + '*.png',
+                  filename])
+            if os.path.exists(filename):
+                print('Animation successfully saved to disk as ' + filename)
+                if delete_anim_cache:
+                    shutil.rmtree(dir_path)
+                    print('Temp directory deleted ' + dir_path)
+
         except FileNotFoundError:
             print('ImageMagick `convert` command could not be found')
 
