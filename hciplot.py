@@ -229,16 +229,15 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
 def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
                 circle_alpha=0.8, circle_color='white', circle_radius=6,
                 circle_label=False, arrow=None, arrow_alpha=0.8,
-                arrow_length=20, arrow_shiftx=5, label=None, label_pad=5,
+                arrow_length=10, arrow_shiftx=5, label=None, label_pad=5,
                 label_size=12, grid=False, grid_alpha=0.4, grid_color='#f7f7f7',
                 grid_spacing=None, cross=None, cross_alpha=0.4, ang_scale=False,
                 ang_ticksep=50, pxscale=0.01, axis=True, show_center=False,
                 cmap=None, log=False, colorbar=True, dpi=80, spsize=6,
-                horsp=0.4, versp=0.2, title=None, sampling=1, save=False):
-    """ Wrapper for easy creation of pyplot subplots. It is convenient for
-    displaying VIP images in jupyter notebooks.
-
-    Backend 'matplotlib'.
+                horsp=0.4, versp=0.2, title=None, sampling=1, save=None,
+                transparent=False):
+    """ Wrapper for easy creation of matplotlib.pyplot subplots. It is
+    convenient for displaying HCI images on Jupyterlab.
 
     Parameters
     ----------
@@ -304,7 +303,7 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
         Pixel scale in arcseconds/px. Default 0.01 for Keck/NIRC2.
     rows : int
         How many rows (subplots in a grid).
-    save : str
+    save : None or str
         If a string is provided the plot is saved using this as the path.
     showcent : bool
         To show a big crosshair at the center of the frame.
@@ -323,7 +322,6 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
         generate the surface graph.
 
     """
-    # GEOM ---------------------------------------------------------------------
     # Chekcing inputs, we take a frame (1 or 3 channels) or tuple of them
     if isinstance(data, np.ndarray):
         if data.ndim == 2:
@@ -441,9 +439,16 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
     else:
         show_cross = False
 
+    # AXIS ---------------------------------------------------------------------
+    if isinstance(axis, bool):
+        axis = [axis] * num_plots
+
     # ANGSCALE -----------------------------------------------------------------
-    if ang_scale:
+    if ang_scale and save is not None:
         print("`Pixel scale set to {}`".format(pxscale))
+
+    if isinstance(ang_scale, bool):
+        ang_scale = [ang_scale] * num_plots
 
     # CMAP ---------------------------------------------------------------------
     if cmap is not None:
@@ -454,7 +459,7 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
             if not num_plots == len(custom_cmap):
                 raise ValueError('`cmap` does not contain enough items')
     else:
-        custom_cmap = [hciplot_cmap] * num_plots
+        custom_cmap = [default_cmap] * num_plots
 
     # COLORBAR -----------------------------------------------------------------
     if colorbar is not None:
@@ -565,8 +570,8 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
 
         if show_arrow and plot_mosaic:
             ax.arrow(arrow[0] + arrow_length + arrow_shiftx, arrow[1],
-                     -arrow_length, 0, color='white', head_width=10,
-                     head_length=8, width=3, length_includes_head=True,
+                     -arrow_length, 0, color='white', head_width=6,
+                     head_length=4, width=2, length_includes_head=True,
                      alpha=arrow_alpha)
 
         if label is not None and plot_mosaic:
@@ -603,7 +608,7 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
         else:
             ax.grid(False)
 
-        if ang_scale and plot_mosaic:
+        if ang_scale[i] and plot_mosaic:
             # Converting axes from pixels to arcseconds
             half_num_ticks = int(np.round(cy // ang_ticksep))
 
@@ -627,14 +632,18 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
             ax.set_xlabel("arcseconds", fontsize=12)
             ax.set_ylabel("arcseconds", fontsize=12)
             ax.tick_params(axis='both', which='major', labelsize=10)
+        else:
+            ax.set_xlabel("x", fontsize=12)
+            ax.set_ylabel("y", fontsize=12)
 
-        if not axis:
+        if not axis[i]:
             ax.set_axis_off()
 
     fig.subplots_adjust(wspace=horsp, hspace=versp)
-    if save:
+
+    if save is not None and isinstance(save, str):
         savefig(save, dpi=dpi, bbox_inches='tight', pad_inches=0,
-                transparent=True)
+                transparent=transparent)
         close()
     else:
         show()
