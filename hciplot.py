@@ -30,11 +30,12 @@ default_cmap = 'viridis'
 hv.extension('bokeh', 'matplotlib')
 
 
-def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
-               vmin=None, vmax=None, size=145, width=350, height=300,
-               cmap=None, colorbar=True, dynamic=True, anim_path=None,
-               data_step_range=None, label=None, label_step_range=None,
-               delay=50, anim_format='gif', delete_anim_cache=True, **kwargs):
+def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
+               figtype='png', vmin=None, vmax=None, size=120, width=400,
+               height=400, cmap=None, colorbar=True, dynamic=True,
+               anim_path=None, data_step_range=None, label=None,
+               label_step_range=None, delay=50, anim_format='gif',
+               delete_anim_cache=True, **kwargs):
     """ Plot multi-dimensional high-contrast imaging datacubes (3d and 4d numpy
     arrays). It allows to visualize in-memory numpy arrays on Jupyterlab by
     leveraging the HoloViews library. It can also generate matplotlib animations
@@ -131,6 +132,7 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
         print(ds)
         print(":Cube_shape\t{}".format(list(cube.shape[::-1])))
 
+        # not working for bokeh: size, dpi
         image_stack = ds.to(hv.Image, kdims=['x', 'y'], dynamic=dynamic)
         hv.output(backend=backend, size=size, dpi=dpi, fig=figtype,
                   max_frames=max_frames)
@@ -206,7 +208,8 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=80, figtype='png',
             if label is None:
                 label = 'frame '
             savelabel = dir_path + label + str(i + 100)
-            plot_frames(cube[i], save=savelabel, dpi=dpi, vmin=vmin, vmax=vmax,
+            plot_frames(cube[i], backend='matplotlib', mode='mosaic',
+                        save=savelabel, dpi=dpi, vmin=vmin, vmax=vmax,
                         colorbar=colorbar, cmap=cmap,
                         label=[label + str(labstep + 1)], **kwargs)
         try:
