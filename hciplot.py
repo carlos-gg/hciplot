@@ -229,15 +229,16 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
         raise ValueError("`mode` is not recognized")
 
 
-def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
-                circle_alpha=0.8, circle_color='white', circle_radius=6,
-                circle_label=False, arrow=None, arrow_alpha=0.8,
-                arrow_length=10, arrow_shiftx=5, label=None, label_pad=5,
-                label_size=12, grid=False, grid_alpha=0.4, grid_color='#f7f7f7',
-                grid_spacing=None, cross=None, cross_alpha=0.4, ang_scale=False,
-                ang_ticksep=50, pxscale=0.01, axis=True, show_center=False,
-                cmap=None, log=False, colorbar=True, dpi=80, spsize=6,
-                horsp=0.4, versp=0.2, title=None, sampling=1, save=None,
+def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
+                vmin=None, circle=None, circle_alpha=0.8, circle_color='white',
+                circle_radius=6, circle_label=False, arrow=None,
+                arrow_alpha=0.8, arrow_length=10, arrow_shiftx=5, label=None,
+                label_pad=5, label_size=12, grid=False, grid_alpha=0.4,
+                grid_color='#f7f7f7', grid_spacing=None, cross=None,
+                cross_alpha=0.4, ang_scale=False, ang_ticksep=50, pxscale=0.01,
+                axis=True, show_center=False, cmap=None, log=False,
+                colorbar=True, dpi=100, size_factor=6, horsp=0.4, versp=0.2,
+                width=400, height=400, title=None, sampling=1, save=None,
                 transparent=False):
     """ Wrapper for easy creation of matplotlib.pyplot subplots. It is
     convenient for displaying HCI images on Jupyterlab.
@@ -280,7 +281,8 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
     crossalpha : float
         Alpha transparency of thr crosshair.
     dpi : int
-        Dots per inch, for plot quality.
+        Dots per inch, determines how many pixels the figure comprises (which
+        affects the plot quality).
     grid : bool
         If True, a grid is displayed over the image, off by default.
     gridalpha : float
@@ -310,8 +312,10 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
         If a string is provided the plot is saved using this as the path.
     showcent : bool
         To show a big crosshair at the center of the frame.
-    spsize : int
-        Determines the size of the plot. Figsize=(spsize*ncols, spsize*nrows).
+    size_factor : int, optional
+        [backend='matplotlib'] Determines the size of the plot by setting the
+        figsize parameter (width x height [inches]) as size_factor * ncols,
+        size_factor * nrows.
     title : str
         Title of the plot(s), None by default.
     vmax : int
@@ -325,7 +329,7 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
         generate the surface graph.
 
     """
-    # Chekcing inputs, we take a frame (1 or 3 channels) or tuple of them
+    # Checking inputs: a frame (1 or 3 channels) or tuple of them
     if isinstance(data, np.ndarray):
         if data.ndim == 2:
             data = [data]
@@ -339,12 +343,21 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
     else:
         raise ValueError("`data` must be a frame or tuple of frames")
 
+    if backend == 'bokeh':
+        if mode == 'surface':
+            raise ValueError('Surface plotting only supported with matplotlib '
+                             'backend')
+        if save is not None:
+            raise ValueError('Saving is only supported with matplotlib backend')
+
     num_plots = len(data)
 
+    if rows == 0:
+        raise ValueError('Rows must be a positive integer')
     if num_plots % rows == 0:
-        cols = num_plots / rows
+        cols = int(num_plots / rows)
     else:
-        cols = (num_plots / rows) + 1
+        cols = int((num_plots / rows) + 1)
 
     # CIRCLE -------------------------------------------------------------------
     if circle is not None:
@@ -490,165 +503,188 @@ def plot_frames(data, mode='mosaic', rows=1, vmax=None, vmin=None, circle=None,
         vmax = [vmax] * num_plots
 
     # --------------------------------------------------------------------------
-    if rows == 0:
-        raise ValueError('Rows must be a positive integer')
-    fig = figure(figsize=(cols * spsize, rows * spsize), dpi=dpi)
+    if backend == 'matplotlib':
+        # Creating the figure --------------------------------------------------
+        fig = figure(figsize=(cols * size_factor, rows * size_factor), dpi=dpi)
 
-    if title is not None:
-        fig.suptitle(title, fontsize=14)
+        if title is not None:
+            fig.suptitle(title, fontsize=14)
 
-    if mode == 'surface':
-        plot_mosaic = False
-    elif mode == 'mosaic':
-        plot_mosaic = True
-    else:
-        raise ValueError("`mode` value was not recognized")
+        if mode == 'surface':
+            plot_mosaic = False
+        elif mode == 'mosaic':
+            plot_mosaic = True
+        else:
+            raise ValueError("`mode` value was not recognized")
 
-    for i, v in enumerate(range(num_plots)):
-        image = data[i].copy()
-        frame_size = image.shape[0]  # assuming square frames
-        cy = image.shape[0] / 2 - 0.5
-        cx = image.shape[1] / 2 - 0.5
-        v += 1
-        ax = subplot(rows, cols, v)
-        ax.set_aspect('equal')
-
-        if plot_mosaic:
+        for i, v in enumerate(range(num_plots)):
+            image = data[i].copy()
+            frame_size = image.shape[0]  # assuming square frames
+            cy = image.shape[0] / 2 - 0.5
+            cx = image.shape[1] / 2 - 0.5
+            v += 1
             ax = subplot(rows, cols, v)
+            ax.set_aspect('equal')
 
-            if logscale[i]:
-                image += np.abs(image.min())
-                if vmin[i] is None:
-                    linthresh = 1e-2
-                else:
-                    linthresh = vmin[i]
-                norm = colors.SymLogNorm(linthresh)
-            else:
-                norm = None
+            if plot_mosaic:
+                ax = subplot(rows, cols, v)
 
-            if image.dtype == bool:
-                image = image.astype(int)
-
-            im = ax.imshow(image, cmap=custom_cmap[i], interpolation='nearest',
-                           origin='lower', vmin=vmin[i], vmax=vmax[i],
-                           norm=norm)
-
-        else:
-            x = np.outer(np.arange(0, frame_size, 1), np.ones(frame_size))
-            y = x.copy().T
-            ax = subplot(rows, cols, v, projection='3d')
-            ax.plot_surface(x, y, image, rstride=sampling, cstride=sampling,
-                            linewidth=2, cmap=custom_cmap[i], antialiased=True,
-                            vmin=vmin[i], vmax=vmax[i])
-            ax.set_xlabel('x')
-            ax.set_ylabel('y')
-            ax.set_zlabel('flux')
-            ax.dist = 10
-            if title is not None:
-                ax.set_title(title)
-
-        if show_circle and plot_mosaic:
-            for j in range(n_circ):
-                circ = Circle(coor_circle[j], radius=circle_radius[j],
-                              fill=False, color=circle_color,
-                              alpha=circle_alpha[j])
-                ax.add_artist(circ)
-                if circle_label:
-                    x = coor_circle[j][0]
-                    y = coor_circle[j][1]
-                    cirlabel = str(int(x))+','+str(int(y))
-                    ax.text(x, y + 1.8 * circle_radius[j], cirlabel, fontsize=8,
-                            color='white', family='monospace', ha='center',
-                            va='top', weight='bold', alpha=circle_alpha[j])
-
-        if show_cross and plot_mosaic:
-            ax.scatter([coor_cross[0]], [coor_cross[1]], marker='+',
-                       color='white', alpha=cross_alpha)
-
-        if show_center[i] and plot_mosaic:
-            ax.axhline(cx, xmin=0, xmax=frame_size, alpha=0.3, lw=0.6,
-                       linestyle='dashed', color='white')
-            ax.axvline(cy, ymin=0, ymax=frame_size, alpha=0.3, lw=0.6,
-                       linestyle='dashed', color='white')
-
-        if show_arrow and plot_mosaic:
-            ax.arrow(arrow[0] + arrow_length + arrow_shiftx, arrow[1],
-                     -arrow_length, 0, color='white', head_width=6,
-                     head_length=4, width=2, length_includes_head=True,
-                     alpha=arrow_alpha)
-
-        if label is not None and plot_mosaic:
-            ax.annotate(label[i], xy=(label_pad, label_pad), color='white',
-                        xycoords='axes pixels', weight='bold', size=label_size)
-
-        if colorbar[i] and plot_mosaic:
-            # create an axes to the right ax. The width of cax is 5% of ax
-            # and the padding between cax and ax wis fixed at 0.05 inch
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
-            cb = mplcbar(im, ax=ax, cax=cax, drawedges=False)
-            cb.outline.set_linewidth(0.1)
-            cb.ax.tick_params(labelsize=8)
-
-        if grid[i] and plot_mosaic:
-            if grid_spacing[i] is None:
-                if cy < 10:
-                    gridspa = 1
-                elif cy >= 10:
-                    if cy % 2 == 0:
-                        gridspa = 4
+                if logscale[i]:
+                    image += np.abs(image.min())
+                    if vmin[i] is None:
+                        linthresh = 1e-2
                     else:
-                        gridspa = 5
-            else:
-                gridspa = grid_spacing[i]
-
-            ax.tick_params(axis='both', which='minor')
-            minor_ticks = np.arange(0, data[i].shape[0], gridspa)
-            ax.set_xticks(minor_ticks, minor=True)
-            ax.set_yticks(minor_ticks, minor=True)
-            ax.grid(True, which='minor', color=grid_color[i], linewidth=0.5,
-                    alpha=grid_alpha[i], linestyle='dashed')
-        else:
-            ax.grid(False)
-
-        if ang_scale[i] and plot_mosaic:
-            # Converting axes from pixels to arcseconds
-            half_num_ticks = int(np.round(cy // ang_ticksep))
-
-            # Calculate the pixel locations at which to put ticks
-            ticks = []
-            for t in range(half_num_ticks, -half_num_ticks-1, -1):
-                # Avoid ticks not showing on the last pixel
-                if not cy - t * ang_ticksep == frame_size:
-                    ticks.append(cy - t * ang_ticksep)
+                        linthresh = vmin[i]
+                    norm = colors.SymLogNorm(linthresh)
                 else:
-                    ticks.append((cy - t * ang_ticksep) - 1)
-            ax.set_xticks(ticks)
-            ax.set_yticks(ticks)
+                    norm = None
 
-            # Corresponding distance in arcseconds, measured from the center
-            labels = []
-            for t in range(half_num_ticks, -half_num_ticks-1, -1):
-                labels.append(-t * (ang_ticksep * pxscale))
-            ax.set_xticklabels(labels)
-            ax.set_yticklabels(labels)
-            ax.set_xlabel("arcseconds", fontsize=12)
-            ax.set_ylabel("arcseconds", fontsize=12)
-            ax.tick_params(axis='both', which='major', labelsize=10)
+                if image.dtype == bool:
+                    image = image.astype(int)
+
+                im = ax.imshow(image, cmap=custom_cmap[i], origin='lower',
+                               interpolation='nearest', vmin=vmin[i],
+                               vmax=vmax[i], norm=norm)
+
+            else:
+                x = np.outer(np.arange(0, frame_size, 1), np.ones(frame_size))
+                y = x.copy().T
+                ax = subplot(rows, cols, v, projection='3d')
+                ax.plot_surface(x, y, image, rstride=sampling, cstride=sampling,
+                                linewidth=2, cmap=custom_cmap[i],
+                                antialiased=True, vmin=vmin[i], vmax=vmax[i])
+                ax.set_xlabel('x')
+                ax.set_ylabel('y')
+                ax.set_zlabel('flux')
+                ax.dist = 10
+                if title is not None:
+                    ax.set_title(title)
+
+            if show_circle and plot_mosaic:
+                for j in range(n_circ):
+                    circ = Circle(coor_circle[j], radius=circle_radius[j],
+                                  fill=False, color=circle_color,
+                                  alpha=circle_alpha[j])
+                    ax.add_artist(circ)
+                    if circle_label:
+                        x = coor_circle[j][0]
+                        y = coor_circle[j][1]
+                        cirlabel = str(int(x))+','+str(int(y))
+                        ax.text(x, y + 1.8 * circle_radius[j], cirlabel,
+                                fontsize=8, color='white', family='monospace',
+                                ha='center', va='top', weight='bold',
+                                alpha=circle_alpha[j])
+
+            if show_cross and plot_mosaic:
+                ax.scatter([coor_cross[0]], [coor_cross[1]], marker='+',
+                           color='white', alpha=cross_alpha)
+
+            if show_center[i] and plot_mosaic:
+                ax.axhline(cx, xmin=0, xmax=frame_size, alpha=0.3, lw=0.6,
+                           linestyle='dashed', color='white')
+                ax.axvline(cy, ymin=0, ymax=frame_size, alpha=0.3, lw=0.6,
+                           linestyle='dashed', color='white')
+
+            if show_arrow and plot_mosaic:
+                ax.arrow(arrow[0] + arrow_length + arrow_shiftx, arrow[1],
+                         -arrow_length, 0, color='white', head_width=6,
+                         head_length=4, width=2, length_includes_head=True,
+                         alpha=arrow_alpha)
+
+            if label is not None and plot_mosaic:
+                ax.annotate(label[i], xy=(label_pad, label_pad), color='white',
+                            xycoords='axes pixels', weight='bold',
+                            size=label_size)
+
+            if colorbar[i] and plot_mosaic:
+                # create an axes to the right ax. The width of cax is 5% of ax
+                # and the padding between cax and ax wis fixed at 0.05 inch
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                cb = mplcbar(im, ax=ax, cax=cax, drawedges=False)
+                cb.outline.set_linewidth(0.1)
+                cb.ax.tick_params(labelsize=8)
+
+            if grid[i] and plot_mosaic:
+                if grid_spacing[i] is None:
+                    if cy < 10:
+                        gridspa = 1
+                    elif cy >= 10:
+                        if cy % 2 == 0:
+                            gridspa = 4
+                        else:
+                            gridspa = 5
+                else:
+                    gridspa = grid_spacing[i]
+
+                ax.tick_params(axis='both', which='minor')
+                minor_ticks = np.arange(0, data[i].shape[0], gridspa)
+                ax.set_xticks(minor_ticks, minor=True)
+                ax.set_yticks(minor_ticks, minor=True)
+                ax.grid(True, which='minor', color=grid_color[i], linewidth=0.5,
+                        alpha=grid_alpha[i], linestyle='dashed')
+            else:
+                ax.grid(False)
+
+            if ang_scale[i] and plot_mosaic:
+                # Converting axes from pixels to arcseconds
+                half_num_ticks = int(np.round(cy // ang_ticksep))
+
+                # Calculate the pixel locations at which to put ticks
+                ticks = []
+                for t in range(half_num_ticks, -half_num_ticks-1, -1):
+                    # Avoid ticks not showing on the last pixel
+                    if not cy - t * ang_ticksep == frame_size:
+                        ticks.append(cy - t * ang_ticksep)
+                    else:
+                        ticks.append((cy - t * ang_ticksep) - 1)
+                ax.set_xticks(ticks)
+                ax.set_yticks(ticks)
+
+                # Corresponding distance in arcseconds, measured from the center
+                labels = []
+                for t in range(half_num_ticks, -half_num_ticks-1, -1):
+                    labels.append(-t * (ang_ticksep * pxscale))
+                ax.set_xticklabels(labels)
+                ax.set_yticklabels(labels)
+                ax.set_xlabel("arcseconds", fontsize=12)
+                ax.set_ylabel("arcseconds", fontsize=12)
+                ax.tick_params(axis='both', which='major', labelsize=10)
+            else:
+                ax.set_xlabel("x", fontsize=12)
+                ax.set_ylabel("y", fontsize=12)
+
+            if not axis[i]:
+                ax.set_axis_off()
+
+        fig.subplots_adjust(wspace=horsp, hspace=versp)
+
+        if save is not None and isinstance(save, str):
+            savefig(save, dpi=dpi, bbox_inches='tight', pad_inches=0,
+                    transparent=transparent)
+            close()
         else:
-            ax.set_xlabel("x", fontsize=12)
-            ax.set_ylabel("y", fontsize=12)
+            show()
 
-        if not axis[i]:
-            ax.set_axis_off()
+    elif backend == 'bokeh':
+        subplots = []
+        options = "Image (cmap='" + custom_cmap[i] + "')"
+        hv.opts(options)
 
-    fig.subplots_adjust(wspace=horsp, hspace=versp)
+        for i, v in enumerate(range(num_plots)):
+            image = data[i].copy()
+            if vmin[i] is None:
+                vmin_i = image.min()
+            if vmax[i] is None:
+                vmax_i = image.max()
+            im = hv.Image((range(image.shape[1]), range(image.shape[0]), image))
+            subplots.append(im.opts(tools=['hover'], colorbar=colorbar[i],
+                                    colorbar_opts={'width': 15},
+                                    width=width, height=height,
+                                    clim=(vmin_i, vmax_i)))
 
-    if save is not None and isinstance(save, str):
-        savefig(save, dpi=dpi, bbox_inches='tight', pad_inches=0,
-                transparent=transparent)
-        close()
+        return hv.Layout(subplots).cols(cols)
+
     else:
-        show()
-
+        raise ValueError('`backend` not supported')
 
