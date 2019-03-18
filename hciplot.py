@@ -30,205 +30,6 @@ default_cmap = 'viridis'
 hv.extension('bokeh', 'matplotlib')
 
 
-def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
-               figtype='png', vmin=None, vmax=None, size=120, width=400,
-               height=400, cmap=None, colorbar=True, dynamic=True,
-               anim_path=None, data_step_range=None, label=None,
-               label_step_range=None, delay=50, anim_format='gif',
-               delete_anim_cache=True, **kwargs):
-    """ Plot multi-dimensional high-contrast imaging datacubes (3d and 4d numpy
-    arrays). It allows to visualize in-memory numpy arrays on Jupyterlab by
-    leveraging the HoloViews library. It can also generate matplotlib animations
-    from a 3d numpy array.
-
-    Parameters
-    ----------
-    cube : np.ndarray
-        Input cube.
-    mode : {'slider', 'animation'}, str optional
-        Whether to plot the 3d array as a widget with a slider or to save an
-        animation of the 3d array. The animation is saved to disk using
-        ImageMagick's convert command (it must be installed otherwise a
-         ``FileNotFoundError`` will be raised)
-    dpi : int, optional
-        [backend='matplotlib'] The rendered dpi of the figure.
-    figtype : {'png', 'svg'}, str optional
-        [backend='matplotlib'] Type of output.
-    vmin : float, optional
-        Min value.
-    vmax : float, optional
-        Max value.
-    size :
-        [backend='matplotlib']
-    width :
-        [backend='bokeh']
-    height :
-        [backend='bokeh']
-    cmap : str, optional
-        Colormap.
-    dynamic : bool, optional
-        When False, a HoloMap is created (slower and will take up a lot of RAM
-        for large datasets). If True, a DynamicMap is created instead.
-    anim_fname : str, optional
-        The animation path/filename. If None then the animation will be called
-        ``animation``.``anim_format`` and will be saved in the current
-        directory.
-    data_step_range : tuple, optional
-        Tuple of 1, 2 or 3 values that creates a range for slicing the ``data``
-        cube.
-    label : str, optional
-        Label to be overlaid on top of each frame of the animation. If None,
-        then 'frame #' will be used.
-    labelpad : int, optional
-        Padding of the label from the left bottom corner. 10 by default.
-    label_step_range : tuple, optional
-        Tuple of 1, 2 or 3 values that creates a range for customizing the label
-        overlaid on top of the image.
-    delay : int, optional
-        Delay for displaying the frames in the animation sequence.
-    anim_format : str, optional
-        Format of the saved animation. By default 'gif' is used. Other formats
-        supported by ImageMagick are valid, such as 'mp4'.
-    **kwargs : dictionary, optional
-        Arguments to be passed to ``plot_2d`` to customize the plot.
-
-
-    Notes
-    -----
-    http://holoviews.org/getting_started/Gridded_Datasets.html
-    http://holoviews.org/user_guide/Gridded_Datasets.html
-    http://holoviews.org/user_guide/Applying_Customizations.html
-    """
-    if cmap is None:
-        cmap = default_cmap
-
-    if mode == 'slider':
-        if cube.ndim == 3:
-            # Dataset((X, Y, Z), Data), where
-            # X is a 1D array of shape M ,
-            # Y is a 1D array of shape N and
-            # Z is a 1D array of shape O
-            # Data is a ND array of shape NxMxO
-            ds = hv.Dataset((range(cube.shape[2]), range(cube.shape[1]),
-                             range(cube.shape[0]), cube), ['x', 'y', 'time'],
-                            'flux')
-            max_frames = cube.shape[0]
-        elif cube.ndim == 4:
-            # adding a lambda dimension
-            ds = hv.Dataset((range(cube.shape[3]), range(cube.shape[2]),
-                             range(cube.shape[1]), range(cube.shape[0]), cube),
-                            ['x', 'y', 'time', 'lambda'], 'flux')
-            max_frames = cube.shape[0] * cube.shape[1]
-        else:
-            raise TypeError('Only 3d and 4d numpy arrays are accepted when '
-                            '`mode`=`slider`')
-
-        # Matplotlib takes None but not Bokeh. We take global min & max instead
-        if vmin is None:
-            vmin = cube.min()
-        if vmax is None:
-            vmax = cube.max()
-
-        print(ds)
-        print(":Cube_shape\t{}".format(list(cube.shape[::-1])))
-
-        # not working for bokeh: size, dpi
-        image_stack = ds.to(hv.Image, kdims=['x', 'y'], dynamic=dynamic)
-        hv.output(backend=backend, size=size, dpi=dpi, fig=figtype,
-                  max_frames=max_frames)
-
-        if backend == 'matplotlib':
-            # keywords in the currently active 'matplotlib' renderer are:
-            # 'alpha', 'clims', 'cmap', 'filterrad', 'interpolation', 'norm',
-            # 'visible'
-            options = "Image (cmap='" + cmap + "', interpolation='nearest',"
-            options += " clims=("+str(vmin)+','+str(vmax)+")"+")"
-            opts(options, image_stack)
-            return image_stack.opts(opts.Image(colorbar=colorbar))
-            # hv.save(image_stack, 'holomap.gif', fps=5)
-
-        elif backend == 'bokeh':
-            options = "Image (cmap='" + cmap + "')"
-            opts(options, image_stack)
-            return image_stack.opts(opts.Image(colorbar=colorbar,
-                                               colorbar_opts={'width': 15},
-                                               width=width, height=height,
-                                               clim=(vmin, vmax),
-                                               tools=['hover']))
-
-    elif mode == 'animation':
-        if not (isinstance(cube, np.ndarray) and cube.ndim == 3):
-            raise TypeError('Only 3d numpy arrays are accepted when '
-                            '`mode`=`animation`')
-        if backend == 'bokeh':
-            print('Creating animations works with the matplotlib backend')
-
-        dir_path = './animation_temp/'
-        if anim_path is None:
-            anim_path = './animation'
-
-        if data_step_range is None:
-            data_step_range = range(0, cube.shape[0], 1)
-        else:
-            if not isinstance(data_step_range, tuple):
-                msg = '`data_step_range` must be a tuple with 1, 2 or 3 values'
-                raise ValueError(msg)
-            if len(data_step_range) == 1:
-                data_step_range = range(data_step_range)
-            elif len(data_step_range) == 2:
-                data_step_range = range(data_step_range[0], data_step_range[1])
-            elif len(data_step_range) == 3:
-                data_step_range = range(data_step_range[0],
-                                        data_step_range[1],
-                                        data_step_range[2])
-
-        if label_step_range is None:
-            label_step_range = data_step_range
-        else:
-            if not isinstance(label_step_range, tuple):
-                msg = '`label_step_range` must be a tuple with 1, 2 or 3 values'
-                raise ValueError(msg)
-            if len(label_step_range) == 1:
-                label_step_range = range(label_step_range)
-            elif len(label_step_range) == 2:
-                label_step_range = range(label_step_range[0],
-                                         label_step_range[1])
-            elif len(label_step_range) == 3:
-                label_step_range = range(label_step_range[0],
-                                         label_step_range[1],
-                                         label_step_range[2])
-
-        if os.path.exists(dir_path):
-            shutil.rmtree(dir_path)
-            print('Replacing ' + dir_path)
-        os.mkdir(dir_path)
-
-        print('Producing each animation frame...')
-        for i, labstep in zip(data_step_range, list(label_step_range)):
-            if label is None:
-                label = 'frame '
-            savelabel = dir_path + label + str(i + 100)
-            plot_frames(cube[i], backend='matplotlib', mode='mosaic',
-                        save=savelabel, dpi=dpi, vmin=vmin, vmax=vmax,
-                        colorbar=colorbar, cmap=cmap,
-                        label=[label + str(labstep + 1)], **kwargs)
-        try:
-            filename = anim_path + '.' + anim_format
-            call(['convert', '-delay', str(delay), dir_path + '*.png',
-                  filename])
-            if os.path.exists(filename):
-                print('Animation successfully saved to disk as ' + filename)
-                if delete_anim_cache:
-                    shutil.rmtree(dir_path)
-                    print('Temp directory deleted ' + dir_path)
-
-        except FileNotFoundError:
-            print('ImageMagick `convert` command could not be found')
-
-    else:
-        raise ValueError("`mode` is not recognized")
-
-
 def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 vmin=None, circle=None, circle_alpha=0.8, circle_color='white',
                 circle_radius=6, circle_label=False, arrow=None,
@@ -305,7 +106,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         When the input (``*args``) is a 3d array, maxplots sets the number of
         cube slices to be displayed.
     pxscale : float
-        Pixel scale in arcseconds/px. Default 0.01 for Keck/NIRC2.
+        Pixel scale in arcseconds/px. Default 0.01 (Keck/NIRC2, SPHERE-IRDIS).
     rows : int
         How many rows (subplots in a grid).
     save : None or str
@@ -668,7 +469,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
     elif backend == 'bokeh':
         subplots = []
-        options = "Image (cmap='" + custom_cmap[i] + "')"
+        options = "Image (cmap='" + custom_cmap[0] + "')"  # taking first item
         hv.opts(options)
 
         for i, v in enumerate(range(num_plots)):
@@ -687,4 +488,204 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
     else:
         raise ValueError('`backend` not supported')
+
+
+def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
+               figtype='png', vmin=None, vmax=None, size=120, width=400,
+               height=400, cmap=None, colorbar=True, dynamic=True,
+               anim_path=None, data_step_range=None, label=None,
+               label_step_range=None, delay=50, anim_format='gif',
+               delete_anim_cache=True, **kwargs):
+    """ Plot multi-dimensional high-contrast imaging datacubes (3d and 4d numpy
+    arrays). It allows to visualize in-memory numpy arrays on Jupyterlab by
+    leveraging the HoloViews library. It can also generate matplotlib animations
+    from a 3d numpy array.
+
+    Parameters
+    ----------
+    cube : np.ndarray
+        Input cube.
+    mode : {'slider', 'animation'}, str optional
+        Whether to plot the 3d array as a widget with a slider or to save an
+        animation of the 3d array. The animation is saved to disk using
+        ImageMagick's convert command (it must be installed otherwise a
+         ``FileNotFoundError`` will be raised)
+    dpi : int, optional
+        [backend='matplotlib'] The rendered dpi of the figure.
+    figtype : {'png', 'svg'}, str optional
+        [backend='matplotlib'] Type of output.
+    vmin : float, optional
+        Min value.
+    vmax : float, optional
+        Max value.
+    size :
+        [backend='matplotlib']
+    width :
+        [backend='bokeh']
+    height :
+        [backend='bokeh']
+    cmap : str, optional
+        Colormap.
+    dynamic : bool, optional
+        When False, a HoloMap is created (slower and will take up a lot of RAM
+        for large datasets). If True, a DynamicMap is created instead.
+    anim_fname : str, optional
+        The animation path/filename. If None then the animation will be called
+        ``animation``.``anim_format`` and will be saved in the current
+        directory.
+    data_step_range : tuple, optional
+        Tuple of 1, 2 or 3 values that creates a range for slicing the ``data``
+        cube.
+    label : str, optional
+        Label to be overlaid on top of each frame of the animation. If None,
+        then 'frame #' will be used.
+    labelpad : int, optional
+        Padding of the label from the left bottom corner. 10 by default.
+    label_step_range : tuple, optional
+        Tuple of 1, 2 or 3 values that creates a range for customizing the label
+        overlaid on top of the image.
+    delay : int, optional
+        Delay for displaying the frames in the animation sequence.
+    anim_format : str, optional
+        Format of the saved animation. By default 'gif' is used. Other formats
+        supported by ImageMagick are valid, such as 'mp4'.
+    **kwargs : dictionary, optional
+        Arguments to be passed to ``plot_2d`` to customize the plot.
+
+
+    Notes
+    -----
+    http://holoviews.org/getting_started/Gridded_Datasets.html
+    http://holoviews.org/user_guide/Gridded_Datasets.html
+    http://holoviews.org/user_guide/Applying_Customizations.html
+    """
+    if cmap is None:
+        cmap = default_cmap
+
+    if mode == 'slider':
+        if cube.ndim == 3:
+            # Dataset((X, Y, Z), Data), where
+            # X is a 1D array of shape M ,
+            # Y is a 1D array of shape N and
+            # Z is a 1D array of shape O
+            # Data is a ND array of shape NxMxO
+            ds = hv.Dataset((range(cube.shape[2]), range(cube.shape[1]),
+                             range(cube.shape[0]), cube), ['x', 'y', 'time'],
+                            'flux')
+            max_frames = cube.shape[0]
+        elif cube.ndim == 4:
+            # adding a lambda dimension
+            ds = hv.Dataset((range(cube.shape[3]), range(cube.shape[2]),
+                             range(cube.shape[1]), range(cube.shape[0]), cube),
+                            ['x', 'y', 'time', 'lambda'], 'flux')
+            max_frames = cube.shape[0] * cube.shape[1]
+        else:
+            raise TypeError('Only 3d and 4d numpy arrays are accepted when '
+                            '`mode`=`slider`')
+
+        # Matplotlib takes None but not Bokeh. We take global min & max instead
+        if vmin is None:
+            vmin = cube.min()
+        if vmax is None:
+            vmax = cube.max()
+
+        print(ds)
+        print(":Cube_shape\t{}".format(list(cube.shape[::-1])))
+
+        # not working for bokeh: size, dpi
+        image_stack = ds.to(hv.Image, kdims=['x', 'y'], dynamic=dynamic)
+        hv.output(backend=backend, size=size, dpi=dpi, fig=figtype,
+                  max_frames=max_frames)
+
+        if backend == 'matplotlib':
+            # keywords in the currently active 'matplotlib' renderer are:
+            # 'alpha', 'clims', 'cmap', 'filterrad', 'interpolation', 'norm',
+            # 'visible'
+            options = "Image (cmap='" + cmap + "', interpolation='nearest',"
+            options += " clims=("+str(vmin)+','+str(vmax)+")"+")"
+            opts(options, image_stack)
+            return image_stack.opts(opts.Image(colorbar=colorbar))
+            # hv.save(image_stack, 'holomap.gif', fps=5)
+
+        elif backend == 'bokeh':
+            options = "Image (cmap='" + cmap + "')"
+            opts(options, image_stack)
+            return image_stack.opts(opts.Image(colorbar=colorbar,
+                                               colorbar_opts={'width': 15},
+                                               width=width, height=height,
+                                               clim=(vmin, vmax),
+                                               tools=['hover']))
+
+    elif mode == 'animation':
+        if not (isinstance(cube, np.ndarray) and cube.ndim == 3):
+            raise TypeError('Only 3d numpy arrays are accepted when '
+                            '`mode`=`animation`')
+        if backend == 'bokeh':
+            print('Creating animations works with the matplotlib backend')
+
+        dir_path = './animation_temp/'
+        if anim_path is None:
+            anim_path = './animation'
+
+        if data_step_range is None:
+            data_step_range = range(0, cube.shape[0], 1)
+        else:
+            if not isinstance(data_step_range, tuple):
+                msg = '`data_step_range` must be a tuple with 1, 2 or 3 values'
+                raise ValueError(msg)
+            if len(data_step_range) == 1:
+                data_step_range = range(data_step_range)
+            elif len(data_step_range) == 2:
+                data_step_range = range(data_step_range[0], data_step_range[1])
+            elif len(data_step_range) == 3:
+                data_step_range = range(data_step_range[0],
+                                        data_step_range[1],
+                                        data_step_range[2])
+
+        if label_step_range is None:
+            label_step_range = data_step_range
+        else:
+            if not isinstance(label_step_range, tuple):
+                msg = '`label_step_range` must be a tuple with 1, 2 or 3 values'
+                raise ValueError(msg)
+            if len(label_step_range) == 1:
+                label_step_range = range(label_step_range)
+            elif len(label_step_range) == 2:
+                label_step_range = range(label_step_range[0],
+                                         label_step_range[1])
+            elif len(label_step_range) == 3:
+                label_step_range = range(label_step_range[0],
+                                         label_step_range[1],
+                                         label_step_range[2])
+
+        if os.path.exists(dir_path):
+            shutil.rmtree(dir_path)
+            print('Replacing ' + dir_path)
+        os.mkdir(dir_path)
+
+        print('Producing each animation frame...')
+        for i, labstep in zip(data_step_range, list(label_step_range)):
+            if label is None:
+                label = 'frame '
+            savelabel = dir_path + label + str(i + 100)
+            plot_frames(cube[i], backend='matplotlib', mode='mosaic',
+                        save=savelabel, dpi=dpi, vmin=vmin, vmax=vmax,
+                        colorbar=colorbar, cmap=cmap,
+                        label=[label + str(labstep + 1)], **kwargs)
+        try:
+            filename = anim_path + '.' + anim_format
+            call(['convert', '-delay', str(delay), dir_path + '*.png',
+                  filename])
+            if os.path.exists(filename):
+                print('Animation successfully saved to disk as ' + filename)
+                if delete_anim_cache:
+                    shutil.rmtree(dir_path)
+                    print('Temp directory deleted ' + dir_path)
+
+        except FileNotFoundError:
+            print('ImageMagick `convert` command could not be found')
+
+    else:
+        raise ValueError("`mode` is not recognized")
+
 
