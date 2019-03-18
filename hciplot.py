@@ -8,7 +8,8 @@ import numpy as np
 import holoviews as hv
 from holoviews import opts
 from subprocess import call
-from matplotlib.pyplot import figure, subplot, show, Circle, savefig, close
+from matplotlib.pyplot import (figure, subplot, show, Circle, savefig, close,
+                               hlines, annotate)
 from matplotlib.pyplot import colorbar as mplcbar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.cm import register_cmap
@@ -37,10 +38,10 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 label_pad=5, label_size=12, grid=False, grid_alpha=0.4,
                 grid_color='#f7f7f7', grid_spacing=None, cross=None,
                 cross_alpha=0.4, ang_scale=False, ang_ticksep=50, pxscale=0.01,
-                axis=True, show_center=False, cmap=None, log=False,
-                colorbar=True, dpi=100, size_factor=6, horsp=0.4, versp=0.2,
-                width=400, height=400, title=None, sampling=1, save=None,
-                transparent=False):
+                ang_legend=False, axis=True, show_center=False, cmap=None,
+                log=False, colorbar=True, dpi=100, size_factor=6, horsp=0.4,
+                versp=0.2, width=400, height=400, title=None, sampling=1,
+                save=None, transparent=False):
     """ Wrapper for easy creation of matplotlib.pyplot subplots. It is
     convenient for displaying HCI images on Jupyterlab.
 
@@ -360,6 +361,21 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 ax.dist = 10
                 if title is not None:
                     ax.set_title(title)
+
+            if ang_legend and plot_mosaic:
+                scaleng = 1. / pxscale
+                scalab = '1 arcsec'
+                scalabloc = scaleng / 2. - 8
+                if scaleng > frame_size / 2.:
+                    scaleng /= 2.
+                    scalab = '500 mas'
+                    scalabloc = scaleng / 2. - 8
+                scapad = 4
+                xma = frame_size - scapad
+                xmi = xma - scaleng
+                hlines(y=scapad, xmin=xmi, xmax=xma, colors='white', lw=1.,
+                       linestyles='solid')
+                annotate(scalab, (xmi + scalabloc, scapad + 2), color='white')
 
             if show_circle and plot_mosaic:
                 for j in range(n_circ):
