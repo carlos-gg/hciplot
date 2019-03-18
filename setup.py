@@ -8,6 +8,9 @@ try:  # pip >= 10
 except ImportError:  # pip <= 9.0.3
     from pip.req import parse_requirements
 
+def resource(*args):
+    return os.path.join(os.path.abspath(os.path.join(__file__, os.pardir)),
+                        *args)
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 reqs = parse_requirements(resource('requirements.txt'), session=False)
