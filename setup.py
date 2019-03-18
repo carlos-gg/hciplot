@@ -1,7 +1,6 @@
 # !/usr/bin/env python
 
-
-
+import os
 from distutils.core import setup
 try:  # pip >= 10
     from pip._internal.req import parse_requirements
