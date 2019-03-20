@@ -546,62 +546,76 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
                anim_path=None, data_step_range=None, label=None,
                label_step_range=None, delay=50, anim_format='gif',
                delete_anim_cache=True, **kwargs):
-    """ Plot multi-dimensional high-contrast imaging datacubes (3d and 4d numpy
-    arrays). It allows to visualize in-memory numpy arrays on Jupyterlab by
-    leveraging the HoloViews library. It can also generate matplotlib animations
-    from a 3d numpy array.
+    """ Plot multi-dimensional high-contrast imaging datacubes (3d and 4d
+    ``numpy`` arrays). It allows to visualize in-memory ``numpy`` arrays on
+    ``Jupyterlab`` by leveraging the ``HoloViews`` library. It can also generate
+    and save animations from a 3d ``numpy`` array with ``matplotlib``.
 
     Parameters
     ----------
     cube : np.ndarray
-        Input cube.
+        Input 3d or 4d cube.
     mode : {'slider', 'animation'}, str optional
         Whether to plot the 3d array as a widget with a slider or to save an
         animation of the 3d array. The animation is saved to disk using
         ImageMagick's convert command (it must be installed otherwise a
-         ``FileNotFoundError`` will be raised)
+        ``FileNotFoundError`` will be raised).
+    backend : {'matplotlib', 'bokeh'}, str optional
+        Selects the backend used to display the plots. ``Bokeh`` plots are
+        interactive, allowing the used to zoom, pan, inspect pixel values, etc.
+        ``Matplotlib`` can lead to some flickering when using the slider and
+        ``dynamic`` is True.
     dpi : int, optional
         [backend='matplotlib'] The rendered dpi of the figure.
     figtype : {'png', 'svg'}, str optional
         [backend='matplotlib'] Type of output.
-    vmin : float, optional
-        Min value.
-    vmax : float, optional
-        Max value.
-    size :
-        [backend='matplotlib']
-    width :
-        [backend='bokeh']
-    height :
-        [backend='bokeh']
-    cmap : str, optional
-        Colormap.
+    vmin : None, float or int, optional
+        For defining the data range that the colormap covers. When set to None,
+        the colormap covers the complete value range of the supplied data.
+    vmax : None, float or int, optional
+        For defining the data range that the colormap covers. When set to None,
+        the colormap covers the complete value range of the supplied data.
+    size : int, optional
+        [backend='matplotlib'] Sets the size of the plot.
+    width : int, optional
+        [backend='bokeh'] Sets the width of the plot.
+    height : int, optional
+        [backend='bokeh'] Sets the height of the plot.
+    cmap : None or str, optional
+        Colormap. When None, the value of the global variable ``default_cmap``
+        will be used.
+    colorbar : bool, optional
+        If True, a colorbar is shown.
     dynamic : bool, optional
-        When False, a HoloMap is created (slower and will take up a lot of RAM
-        for large datasets). If True, a DynamicMap is created instead.
-    anim_fname : str, optional
-        The animation path/filename. If None then the animation will be called
-        ``animation``.``anim_format`` and will be saved in the current
-        directory.
+        [mode='slider'] When False, a ``HoloViews.HoloMap`` is created (slower
+        and will take up a lot of RAM for large datasets). If True, a
+        ``HoloViews.DynamicMap`` is created instead.
+    anim_path : str, optional
+        [mode='animation'] The animation path/filename. If None then the
+        animation will be called ``animation``.``anim_format`` and will be saved
+        in the current directory.
     data_step_range : tuple, optional
-        Tuple of 1, 2 or 3 values that creates a range for slicing the ``data``
-        cube.
+        [mode='animation'] Tuple of 1, 2 or 3 values that creates a range for
+        slicing the ``data`` cube.
     label : str, optional
-        Label to be overlaid on top of each frame of the animation. If None,
-        then 'frame #' will be used.
-    labelpad : int, optional
-        Padding of the label from the left bottom corner. 10 by default.
+        [mode='animation'] Label to be overlaid on top of each frame of the
+        animation. If None, then ``frame <#>`` will be used.
     label_step_range : tuple, optional
-        Tuple of 1, 2 or 3 values that creates a range for customizing the label
-        overlaid on top of the image.
+        [mode='animation'] Tuple of 1, 2 or 3 values that creates a range for
+        customizing the label overlaid on top of each frame of the animation.
     delay : int, optional
-        Delay for displaying the frames in the animation sequence.
+        [mode='animation'] Delay for displaying the frames in the animation
+        sequence.
     anim_format : str, optional
-        Format of the saved animation. By default 'gif' is used. Other formats
-        supported by ImageMagick are valid, such as 'mp4'.
+        [mode='animation'] Format of the saved animation. By default 'gif' is
+        used. Other formats supported by ImageMagick are valid, such as 'mp4'.
+    delete_anim_cache : str, optional
+        [mode='animation'] If True, the cache folder is deleted once the
+        animation file is saved to disk.
     **kwargs : dictionary, optional
-        Arguments to be passed to ``plot_2d`` to customize the plot.
-
+        [mode='animation'] Arguments to be passed to ``plot_frames`` to
+        customize each frame of the animation (adding markers, using a log
+        scale, etc).
 
     Notes
     -----
