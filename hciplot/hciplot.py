@@ -42,93 +42,127 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 log=False, colorbar=True, dpi=100, size_factor=6, horsp=0.4,
                 versp=0.2, width=400, height=400, title=None, sampling=1,
                 save=None, transparent=False):
-    """ Wrapper for easy creation of matplotlib.pyplot subplots. It is
-    convenient for displaying HCI images on Jupyterlab.
+    """ Plot a 2d array or a tuple of 2d arrays. Supports the ``matplotlib`` and
+    ``bokeh`` backends. When having a tuple of 2d arrays, the plot turns into a
+    mosaic. For ``matplotlib``, instead of a mosaic of images, we can create a
+    mosaic of surface plots. Also, when using the ``matplotlib`` backend, this
+    function allows to annotate and customize the plot and produce publication
+    quality figures.
 
     Parameters
     ----------
-    data : list
-        List of 2d arrays or a single 3d array to be plotted.
-    angscale : bool
-        If True, the axes are displayed in angular scale (arcsecs).
-    angticksep : int
-        Separation for the ticks when using axis in angular scale.
-    arrow : bool
-        To show an arrow pointing to input px coordinates.
-    arrowalpha : float
-        Alpha transparency for the arrow.
-    arrowlength : int
-        Length of the arrow, 20 px by default.
-    arrowshiftx : int
-        Shift in x of the arrow pointing position, 5 px by default.
-    axis : bool
-        Show the axis, on by default.
-    circle : tuple or list of tuples
-        To show a circle at given px coordinates. The circles are shown on all
-        subplots.
-    circlealpha : float or list of floats
-        Alpha transparencey for each circle.
-    circlecolor : str
-        Color or circle(s). White by default.
-    circlelabel : bool
-        Whether to show the coordinates of each circle.
-    circlerad : int
-        Radius of the circle, 6 px by default.
-    cmap : str
-        Colormap to be used, 'viridis' by default.
-    colorb : bool
-        To attach a colorbar, on by default.
-    cross : tuple of float
-        If provided, a crosshair is displayed at given px coordinates.
-    crossalpha : float
-        Alpha transparency of thr crosshair.
-    dpi : int
-        Dots per inch, determines how many pixels the figure comprises (which
-        affects the plot quality).
-    grid : bool
-        If True, a grid is displayed over the image, off by default.
-    gridalpha : float
-        Alpha transparency of the grid.
-    gridcolor : str
-        Color of the grid lines.
-    gridspacing : int
-        Separation of the grid lines in pixels.
-    horsp : float
-        Horizontal gap between subplots.
-    label : str or list of str
-        Text for annotating on subplots.
-    labelpad : int
-        Padding of the label from the left bottom corner. 5 by default.
-    labelsize : int
-        Size of the labels.
-    log : bool
-        Log colorscale.
-    maxplots : int
-        When the input (``*args``) is a 3d array, maxplots sets the number of
-        cube slices to be displayed.
+    data : numpy.ndarray or tuple
+        A single 2d array or a tuple of 2d arrays.
+    backend : {'matplotlib', 'bokeh'}, str optional
+        Selects the backend used to display the plots. ``Matplotlib`` plots
+        are static and allow customization (leading to publication quality
+        figures). ``Bokeh`` plots are interactive, allowing the used to zoom,
+        pan, inspect pixel values, etc.
+    mode : {'mosaic', 'surface'}, str optional
+        [backend='matplotlib'] Controls whether to turn the images into surface
+        plots.
+    rows : int, optional
+        How many rows (subplots in a grid) in the case ``data`` is a tuple of
+        2d arrays.
+    vmax : None, float or int, optional
+        For defining the data range that the colormap covers. When set to None,
+        the colormap covers the complete value range of the supplied data.
+    vmin : None, float or int, optional
+        For stretching the displayed pixels values. When set to None,
+        the colormap covers the complete value range of the supplied data.
+    circle : None, tuple or tuple of tuples, optional
+        [backend='matplotlib'] To show a circle at the given px coordinates. The
+        circles are shown on all subplots.
+    circle_alpha : float or tuple of floats, optional
+        [backend='matplotlib'] Alpha transparency for each circle.
+    circle_color : str, optional
+        [backend='matplotlib'] Color of the circles. White by default.
+    circle_radius : int, optional
+        [backend='matplotlib'] Radius of the circles, 6 px by default.
+    circle_label : bool, optional
+        [backend='matplotlib'] Whether to show the coordinates next to each
+        circle.
+    arrow : None or tuple of floats, optional
+        [backend='matplotlib'] To show an arrow pointing to the given pixel
+        coordinates.
+    arrow_alpha : float, optional
+        [backend='matplotlib'] Alpha transparency for the arrow.
+    arrow_length : int, optional
+        [backend='matplotlib'] Length of the arrow, 10 px by default.
+    arrow_shiftx : int, optional
+        [backend='matplotlib'] Shift in x of the arrow pointing position, 5 px
+        by default.
+    label : None, str or list of str, optional
+        [backend='matplotlib'] Text for labeling each subplot. The label is
+        shown at the bottom-left corner if each subplot.
+    label_pad : int, optional
+        [backend='matplotlib'] Padding of the label from the left bottom corner.
+        5 by default.
+    label_size : int, optional
+        [backend='matplotlib'] Size of the labels font.
+    grid : bool, optional
+        [backend='matplotlib'] If True, a grid is displayed over the image, off
+        by default.
+    grid_alpha : float, optional
+        [backend='matplotlib'] Alpha transparency of the grid.
+    grid_color : str, optional
+        [backend='matplotlib'] Color of the grid lines.
+    grid_spacing : int, optional
+        [backend='matplotlib'] Separation of the grid lines in pixels.
+    cross : None or tuple of floats, optional
+        [backend='matplotlib'] If provided, a crosshair is displayed at given
+        pixel coordinates.
+    cross_alpha : float, optional
+        [backend='matplotlib'] Alpha transparency of the crosshair.
+    ang_scale : bool, optional
+        [backend='matplotlib'] If True, the axes are displayed in angular scale
+        (arcsecs).
+    ang_ticksep : int, optional
+        [backend='matplotlib'] Separation for the ticks when using axis in
+        angular scale.
     pxscale : float
-        Pixel scale in arcseconds/px. Default 0.01 (Keck/NIRC2, SPHERE-IRDIS).
-    rows : int
-        How many rows (subplots in a grid).
-    save : None or str
-        If a string is provided the plot is saved using this as the path.
-    showcent : bool
-        To show a big crosshair at the center of the frame.
+        [backend='matplotlib'] Pixel scale in arcseconds/px. Default 0.01
+        (Keck/NIRC2, SPHERE-IRDIS).
+    ang_legend : bool, optional
+        [backend='matplotlib'] If True a scaling bar (1 arcsec or 500 mas) will
+        be added on the bottom-right corner of the subplots.
+    axis : bool, optional
+        [backend='matplotlib'] Show the axis, on by default.
+    show_center : bool, optional
+        [backend='matplotlib'] To show a crosshair at the center of the frame.
+    cmap : None, str or tuple of str, optional
+        Colormap to be used. When None, the value of the global variable
+        ``default_cmap`` will be used.
+    log : bool or tuple of bool, optional
+        [backend='matplotlib'] Log colorscale.
+    colorbar : bool or tuple of bool, optional
+        To attach a colorbar, on by default.
+    dpi : int, optional
+        [backend='matplotlib'] Dots per inch, determines how many pixels the
+        figure comprises (which affects the plot quality).
     size_factor : int, optional
         [backend='matplotlib'] Determines the size of the plot by setting the
         figsize parameter (width x height [inches]) as size_factor * ncols,
         size_factor * nrows.
-    title : str
-        Title of the plot(s), None by default.
-    vmax : int
-        For stretching the displayed pixels values.
-    vmin : int
-        For stretching the displayed pixels values.
-    versp : float
-        Vertical gap between subplots.
+    horsp : float, optional
+        [backend='matplotlib'] Horizontal gap between subplots.
+    versp : float, optional
+        [backend='matplotlib'] Vertical gap between subplots.
+    width : int, optional
+        [backend='bokeh'] Controls the width of each subplot.
+    height : int, optional
+        [backend='bokeh'] Controls the height of each subplot.
+    title : None or str, optional
+        [backend='matplotlib'] Title of the whole figure, None by default.
     sampling : int, optional
         [mode='surface'] Sets the stride used to sample the input data to
         generate the surface graph.
+    save : None or str, optional
+        If a string is provided the plot is saved using ``save`` as the
+        path/filename.
+    transparent : bool, optional
+        [save=True] Whether to have a transparent background between subplots.
+        If False, then a white background is shown.
 
     """
     # Checking inputs: a frame (1 or 3 channels) or tuple of them
