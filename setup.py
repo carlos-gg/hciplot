@@ -1,6 +1,7 @@
 # !/usr/bin/env python
 
 import os
+import re
 from distutils.core import setup
 try:  # pip >= 10
     from pip._internal.req import parse_requirements
@@ -13,6 +14,13 @@ def resource(*args):
                         *args)
 
 
+with open(resource('hciplot', '__init__.py')) as version_file:
+    version_file = version_file.read()
+    VERSION = re.search(r"""^__version__ = ['"]([^'"]*)['"]""",
+                        version_file, re.M)
+    VERSION = VERSION.group(1)
+
+
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 reqs = parse_requirements(resource('requirements.txt'), session=False)
 reqs = [str(ir.req) for ir in reqs]
@@ -20,7 +28,7 @@ reqs = [str(ir.req) for ir in reqs]
 setup(
     name='hciplot',
     packages=['hciplot'],
-    version='0.1.0',
+    version=VERSION,
     description='High-contrast Imaging Plotting library',
     author='Carlos Alberto Gomez Gonzalez',
     license='MIT',
