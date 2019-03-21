@@ -20,6 +20,8 @@ with open(resource('hciplot', '__init__.py')) as version_file:
                         version_file, re.M)
     VERSION = VERSION.group(1)
 
+with open(resource('README.rst')) as readme_file:
+    README = readme_file.read()
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 reqs = parse_requirements(resource('requirements.txt'), session=False)
@@ -30,6 +32,7 @@ setup(
     packages=['hciplot'],
     version=VERSION,
     description='High-contrast Imaging Plotting library',
+    long_description=README,
     author='Carlos Alberto Gomez Gonzalez',
     license='MIT',
     author_email='carlosgg33@gmail.com',
@@ -39,11 +42,14 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
-        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX :: Linux',
         'Natural Language :: English',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Topic :: Software Development'],
+        'Topic :: Scientific/Engineering :: Astronomy'],
 )
