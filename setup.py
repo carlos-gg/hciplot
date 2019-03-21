@@ -33,6 +33,7 @@ setup(
     version=VERSION,
     description='High-contrast Imaging Plotting library',
     long_description=README,
+    long_description_content_type='text/markdown',
     author='Carlos Alberto Gomez Gonzalez',
     license='MIT',
     author_email='carlosgg33@gmail.com',
