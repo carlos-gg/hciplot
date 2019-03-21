@@ -228,8 +228,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
             circle_alpha = [circle_alpha] * n_circ
         elif isinstance(circle_alpha, tuple):
             # a different value for each circle
-            if not num_plots == len(circle_alpha):
-                msg = '`circle_alpha` must have the same len as `data`'
+            if not n_circ == len(circle_alpha):
+                msg = '`circle_alpha` must have the same len as `circle`'
                 raise ValueError(msg)
 
     # SHOW_CENTER --------------------------------------------------------------
