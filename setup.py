@@ -20,7 +20,7 @@ with open(resource('hciplot', '__init__.py')) as version_file:
                         version_file, re.M)
     VERSION = VERSION.group(1)
 
-with open(resource('README.rst')) as readme_file:
+with open(resource('README.md')) as readme_file:
     README = readme_file.read()
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
