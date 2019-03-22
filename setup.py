@@ -3,10 +3,6 @@
 import os
 import re
 from setuptools import setup
-try:  # pip >= 10
-    from pip._internal.req import parse_requirements
-except ImportError:  # pip <= 9.0.3
-    from pip.req import parse_requirements
 
 
 def resource(*args):
@@ -23,10 +19,6 @@ with open(resource('hciplot', '__init__.py')) as version_file:
 with open(resource('README.md')) as readme_file:
     README = readme_file.read()
 
-# parse_requirements() returns generator of pip.req.InstallRequirement objects
-reqs = parse_requirements(resource('requirements.txt'), session=False)
-reqs = [str(ir.req) for ir in reqs]
-
 setup(
     name='hciplot',
     packages=['hciplot'],
@@ -39,7 +31,10 @@ setup(
     author_email='carlosgg33@gmail.com',
     url='https://github.com/carlgogo/hciplot',
     keywords=['plotting', 'hci', 'package'],
-    install_requires=reqs,
+    install_requires=['numpy >= 1.16',
+                      'matplotlib >= 2.2',
+                      'bokeh >=1.0',
+                      'holoviews >= 1.11'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
