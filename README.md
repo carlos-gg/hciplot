@@ -1,4 +1,6 @@
-# hciplot
+[![PyPI version](https://badge.fury.io/py/hciplot.svg)](https://badge.fury.io/py/hciplot)
+
+# HCIplot
 
 ``HCIplot`` -- High-contrast Imaging Plotting library. The goal of this
 library is to be the "Swiss army" solution for plotting and visualizing 
