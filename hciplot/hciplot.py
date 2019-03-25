@@ -28,7 +28,6 @@ ds9heat = {'red': lambda v: np.interp(v, [0, 0.34, 1], [0, 1, 1]),
 register_cmap('ds9cool', data=ds9cool)
 register_cmap('ds9heat', data=ds9heat)
 default_cmap = 'viridis'
-hv.extension('bokeh', 'matplotlib')
 
 
 def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
@@ -518,6 +517,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
             show()
 
     elif backend == 'bokeh':
+        hv.extension(backend)
         subplots = []
         options = "Image (cmap='" + custom_cmap[0] + "')"  # taking first item
         hv.opts(options)
@@ -623,6 +623,8 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
     http://holoviews.org/user_guide/Gridded_Datasets.html
     http://holoviews.org/user_guide/Applying_Customizations.html
     """
+    hv.extension(backend)
+
     if cmap is None:
         cmap = default_cmap
 
