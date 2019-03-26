@@ -625,10 +625,17 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
     """
     hv.extension(backend)
 
+    if not isinstance(cube, np.ndarray):
+        raise TypeError('`cube` must be a numpy.ndarray')
+
     if cmap is None:
         cmap = default_cmap
 
     if mode == 'slider':
+        if cube.ndim not in (3, 4):
+            raise ValueError('`cube` must be a 3 or 4 array when `mode` set to '
+                             'slider')
+
         if cube.ndim == 3:
             # Dataset((X, Y, Z), Data), where
             # X is a 1D array of shape M ,
@@ -645,9 +652,6 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
                              range(cube.shape[1]), range(cube.shape[0]), cube),
                             ['x', 'y', 'time', 'lambda'], 'flux')
             max_frames = cube.shape[0] * cube.shape[1]
-        else:
-            raise TypeError('Only 3d and 4d numpy arrays are accepted when '
-                            '`mode`=`slider`')
 
         # Matplotlib takes None but not Bokeh. We take global min & max instead
         if vmin is None:
@@ -683,9 +687,10 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
                                                tools=['hover']))
 
     elif mode == 'animation':
-        if not (isinstance(cube, np.ndarray) and cube.ndim == 3):
-            raise TypeError('Only 3d numpy arrays are accepted when '
-                            '`mode`=`animation`')
+        if cube.ndim != 3:
+            raise ValueError('`cube` must be a 3 array when `mode` set to '
+                             'animation')
+
         if backend == 'bokeh':
             print('Creating animations works with the matplotlib backend')
 
