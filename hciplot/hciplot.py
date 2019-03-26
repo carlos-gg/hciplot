@@ -12,7 +12,6 @@ from matplotlib.pyplot import (figure, subplot, show, Circle, savefig, close,
                                hlines, annotate)
 from matplotlib.pyplot import colorbar as mplcbar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.cm import register_cmap
 import matplotlib.colors as colors
 import matplotlib.cm as mplcm
@@ -383,6 +382,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                                vmax=vmax[i], norm=norm)
 
             else:
+                # Leave the import to make porjection='3d' work
+                from mpl_toolkits.mplot3d import Axes3D
+
                 x = np.outer(np.arange(0, frame_size, 1), np.ones(frame_size))
                 y = x.copy().T
                 ax = subplot(rows, cols, v, projection='3d')
@@ -541,8 +543,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
 
 def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
-               figtype='png', vmin=None, vmax=None, size=120, width=400,
-               height=400, cmap=None, colorbar=True, dynamic=True,
+               figtype='png', vmin=None, vmax=None, size=100, width=360,
+               height=360, cmap=None, colorbar=True, dynamic=True,
                anim_path=None, data_step_range=None, label=None,
                label_step_range=None, delay=50, anim_format='gif',
                delete_anim_cache=True, **kwargs):
@@ -662,7 +664,7 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
         print(ds)
         print(":Cube_shape\t{}".format(list(cube.shape[::-1])))
 
-        # not working for bokeh: size, dpi
+        # not working for bokeh: dpi
         image_stack = ds.to(hv.Image, kdims=['x', 'y'], dynamic=dynamic)
         hv.output(backend=backend, size=size, dpi=dpi, fig=figtype,
                   max_frames=max_frames)
@@ -680,9 +682,25 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
         elif backend == 'bokeh':
             options = "Image (cmap='" + cmap + "')"
             opts(options, image_stack)
+            # Compensating the width to accommodate the colorbar
+            if colorbar:
+                cb_wid = 15
+                cb_pad = 3
+                tick_len = len(str(int(cube.max())))
+                if tick_len < 4:
+                    cb_tick = 25
+                elif tick_len == 4:
+                    cb_tick = 35
+                elif tick_len > 4:
+                    cb_tick = 45
+                width_ = width + cb_pad + cb_wid + cb_tick
+            else:
+                width_ = width
+
             return image_stack.opts(opts.Image(colorbar=colorbar,
-                                               colorbar_opts={'width': 15},
-                                               width=width, height=height,
+                                               colorbar_opts={'width': 15,
+                                                              'padding': 3},
+                                               width=width_, height=height,
                                                clim=(vmin, vmax),
                                                tools=['hover']))
 
