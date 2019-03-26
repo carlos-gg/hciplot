@@ -12,6 +12,7 @@ from matplotlib.pyplot import (figure, subplot, show, Circle, savefig, close,
                                hlines, annotate)
 from matplotlib.pyplot import colorbar as mplcbar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.cm import register_cmap
 import matplotlib.colors as colors
 import matplotlib.cm as mplcm
