@@ -390,7 +390,6 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                                 antialiased=True, vmin=vmin[i], vmax=vmax[i])
                 ax.set_xlabel('x')
                 ax.set_ylabel('y')
-                ax.set_zlabel('flux')
                 ax.dist = 10
                 if title is not None:
                     ax.set_title(title)
