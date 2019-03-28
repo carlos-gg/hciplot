@@ -27,6 +27,7 @@ ds9heat = {'red': lambda v: np.interp(v, [0, 0.34, 1], [0, 1, 1]),
            'blue': lambda v: np.interp(v, [0, 0.65, 0.98, 1], [0, 0, 1, 1])}
 register_cmap('ds9cool', data=ds9cool)
 register_cmap('ds9heat', data=ds9heat)
+cmap_binary = colors.ListedColormap(['black', 'white'])
 default_cmap = 'viridis'
 
 
@@ -38,9 +39,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 grid_color='#f7f7f7', grid_spacing=None, cross=None,
                 cross_alpha=0.4, ang_scale=False, ang_ticksep=50, pxscale=0.01,
                 ang_legend=False, axis=True, show_center=False, cmap=None,
-                log=False, colorbar=True, dpi=100, size_factor=6, horsp=0.4,
-                versp=0.2, width=400, height=400, title=None, sampling=1,
-                save=None, transparent=False):
+                log=False, colorbar=True, colorbar_ticks=None, dpi=100,
+                size_factor=6, horsp=0.4, versp=0.2, width=400, height=400,
+                title=None, sampling=1, save=None, transparent=False):
     """ Plot a 2d array or a tuple of 2d arrays. Supports the ``matplotlib`` and
     ``bokeh`` backends. When having a tuple of 2d arrays, the plot turns into a
     mosaic. For ``matplotlib``, instead of a mosaic of images, we can create a
@@ -317,6 +318,24 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         if isinstance(colorbar, bool):
             colorbar = [colorbar] * num_plots
 
+    if colorbar_ticks is not None:
+        cbar_ticks = colorbar_ticks
+        # must be a tuple
+        if isinstance(cbar_ticks, tuple):
+            # tuple of tuples
+            if isinstance(cbar_ticks[0], tuple):
+                if not num_plots == len(cbar_ticks):
+                    raise ValueError('`colorbar_ticks` does not contain enough '
+                                     'items')
+            # single tuple
+            elif isinstance(cbar_ticks[0], (float, int)):
+                cbar_ticks = [colorbar_ticks] * num_plots
+        else:
+            raise TypeError('`colorbar_ticks` must be a tuple or tuple of '
+                            'tuples')
+    else:
+        cbar_ticks = [None] * num_plots
+
     # LOG ----------------------------------------------------------------------
     if log:
         # Showing bad/nan pixels with the darkest color in current colormap
@@ -377,7 +396,13 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 if image.dtype == bool:
                     image = image.astype(int)
 
-                im = ax.imshow(image, cmap=custom_cmap[i], origin='lower',
+                if custom_cmap[i] == 'binary':
+                    cucmap = cmap_binary
+                    cbticks = (0, 0.5, 1)
+                else:
+                    cucmap = custom_cmap[i]
+                    cbticks = cbar_ticks[i]
+                im = ax.imshow(image, cmap=cucmap, origin='lower',
                                interpolation='nearest', vmin=vmin[i],
                                vmax=vmax[i], norm=norm)
 
@@ -453,7 +478,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 # and the padding between cax and ax wis fixed at 0.05 inch
                 divider = make_axes_locatable(ax)
                 cax = divider.append_axes("right", size="5%", pad=0.05)
-                cb = mplcbar(im, ax=ax, cax=cax, drawedges=False)
+                cb = mplcbar(im, ax=ax, cax=cax, drawedges=False, ticks=cbticks)
                 cb.outline.set_linewidth(0.1)
                 cb.ax.tick_params(labelsize=8)
 
