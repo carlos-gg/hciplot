@@ -248,7 +248,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
     # LABEL --------------------------------------------------------------------
     if label is not None:
-        if not num_plots == len(label):
+        if num_plots == 1:
+            label = [label]
+        elif num_plots > 1 and num_plots != len(label):
             raise ValueError("`label` does not contain enough items")
 
     # GRID ---------------------------------------------------------------------
