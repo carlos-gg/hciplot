@@ -132,11 +132,15 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] To show a crosshair at the center of the frame.
     cmap : None, str or tuple of str, optional
         Colormap to be used. When None, the value of the global variable
-        ``default_cmap`` will be used.
+        ``default_cmap`` will be used. Any string corresponding to a valid
+        ``matplotlib`` colormap can be used. Additionally, 'ds9cool', 'ds9heat'
+        and 'binary' (for binary maps) are valid colormaps for this function.
     log : bool or tuple of bool, optional
-        [backend='matplotlib'] Log colorscale.
+        [backend='matplotlib'] Log color scale.
     colorbar : bool or tuple of bool, optional
         To attach a colorbar, on by default.
+    colorbar_ticks : None, tuple or tuple of tuples, optional
+        [backend='matplotlib'] Custom ticks for the colorbar of each plot.
     dpi : int, optional
         [backend='matplotlib'] Dots per inch, determines how many pixels the
         figure comprises (which affects the plot quality).
