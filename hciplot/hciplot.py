@@ -169,6 +169,64 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         If False, then a white background is shown.
 
     """
+    def check_bool_param(param, name):
+        msg_type = '`' + name + '` must be a bool or tuple of bools'
+        if isinstance(param, bool):
+            param = [param] * num_plots
+        elif isinstance(param, tuple):
+            if not num_plots == len(param):
+                msg = 'The len of `' + name + '` ({}) does not match the ' + \
+                      'number of plots ({})'
+                raise ValueError(msg.format(len(param), num_plots))
+            else:
+                for elem in param:
+                    if not isinstance(elem, bool):
+                        raise TypeError(msg_type)
+        else:
+            raise TypeError(msg_type)
+        return param
+
+    def check_numeric_param(param, name):
+        msg_type = '`' + name + '` must be a None, float/int or tuple of ' + \
+                   'None/float/ints'
+        if param is None:
+            param = [None] * num_plots
+        elif isinstance(param, (int, float)):
+            param = [param] * num_plots
+        elif isinstance(param, tuple):
+            if not num_plots == len(param):
+                msg = 'The len of `' + name + '` ({}) does not match the ' + \
+                      'number of plots ({})'
+                raise ValueError(msg.format(len(param), num_plots))
+            else:
+                for elem in param:
+                    if elem and not isinstance(elem, (float, int)):
+                        raise TypeError(msg_type)
+        else:
+            raise TypeError(msg_type)
+        return param
+
+    def check_str_param(param, name, default_value=None):
+        msg_type = '`' + name + '` must be a None, str or tuple of ' + \
+                   'None/str'
+        if param is None:
+            param = [default_value] * num_plots
+        elif isinstance(param, str):
+            param = [param] * num_plots
+        elif isinstance(param, tuple):
+            if not num_plots == len(param):
+                msg = 'The len of `' + name + '` ({}) does not match the ' + \
+                      'number of plots ({})'
+                raise ValueError(msg.format(len(param), num_plots))
+            else:
+                for elem in param:
+                    if elem and not isinstance(elem, str):
+                        raise TypeError(msg_type)
+        else:
+            raise TypeError(msg_type)
+        return param
+    # --------------------------------------------------------------------------
+
     # Checking inputs: a frame (1 or 3 channels) or tuple of them
     if isinstance(data, np.ndarray):
         if data.ndim == 2:
@@ -236,11 +294,6 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 msg = '`circle_alpha` must have the same len as `circle`'
                 raise ValueError(msg)
 
-    # SHOW_CENTER --------------------------------------------------------------
-    if show_center is not None:
-        if isinstance(show_center, bool):
-            show_center = [show_center] * num_plots
-
     # ARROW --------------------------------------------------------------------
     if arrow is not None:
         if isinstance(arrow, tuple):
@@ -250,42 +303,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     else:
         show_arrow = False
 
-    # LABEL --------------------------------------------------------------------
-    if label is not None:
-        if num_plots == 1:
-            label = [label]
-        elif num_plots > 1 and num_plots != len(label):
-            raise ValueError("`label` does not contain enough items")
-
-    # GRID ---------------------------------------------------------------------
-    if grid is not None:
-        if isinstance(grid, bool):
-            grid = [grid] * num_plots
-
-    if isinstance(grid_alpha, (float, int)):
-        grid_alpha = [grid_alpha] * num_plots
-
-    if isinstance(grid_color, str):
-        grid_color = [grid_color] * num_plots
-
-    if grid_spacing is not None:
-        if isinstance(grid_spacing, int):
-            grid_spacing = [grid_spacing] * num_plots
-    else:
-        grid_spacing = [None] * num_plots
-
     # VMAX-VMIN ----------------------------------------------------------------
-    if isinstance(vmax, tuple):
-        if not num_plots == len(vmax):
-            raise ValueError("`vmax` does not contain enough items")
-    elif isinstance(vmax, (int, float)):
-        vmax = [vmax] * num_plots
-
-    if isinstance(vmin, tuple):
-        if not num_plots == len(vmin):
-            raise ValueError("`vmin` does not contain enough items")
-    elif isinstance(vmin, (int, float)):
-        vmin = [vmin] * num_plots
+    vmin = check_numeric_param(vmin, 'vmin')
+    vmax = check_numeric_param(vmax, 'vmax')
 
     # CROSS --------------------------------------------------------------------
     if cross is not None:
@@ -297,32 +317,29 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     else:
         show_cross = False
 
-    # AXIS ---------------------------------------------------------------------
-    if isinstance(axis, bool):
-        axis = [axis] * num_plots
+    # AXIS, GRID, ANG_SCALE ----------------------------------------------------
+    axis = check_bool_param(axis, 'axis')
+    grid = check_bool_param(grid, 'grid')
+    grid_alpha = check_numeric_param(grid_alpha, 'grid_alpha')
+    grid_spacing = check_numeric_param(grid_spacing, 'grid_spacing')
+    show_center = check_bool_param(show_center, 'show_center')
+    ang_scale = check_bool_param(ang_scale, 'ang_scale')
+    ang_legend = check_bool_param(ang_legend, 'ang_legend')
 
-    # ANGSCALE -----------------------------------------------------------------
-    if ang_scale and save is not None:
+    if isinstance(grid_color, str):
+        grid_color = [grid_color] * num_plots
+
+    if any(ang_scale) and save is not None:
         print("`Pixel scale set to {}`".format(pxscale))
 
-    if isinstance(ang_scale, bool):
-        ang_scale = [ang_scale] * num_plots
+    # LABEL --------------------------------------------------------------------
+    label = check_str_param(label, 'label')
 
     # CMAP ---------------------------------------------------------------------
-    if cmap is not None:
-        custom_cmap = cmap
-        if not isinstance(custom_cmap, tuple):
-            custom_cmap = [cmap] * num_plots
-        else:
-            if not num_plots == len(custom_cmap):
-                raise ValueError('`cmap` does not contain enough items')
-    else:
-        custom_cmap = [default_cmap] * num_plots
+    custom_cmap = check_str_param(cmap, 'cmap', default_cmap)
 
     # COLORBAR -----------------------------------------------------------------
-    if colorbar is not None:
-        if isinstance(colorbar, bool):
-            colorbar = [colorbar] * num_plots
+    colorbar = check_bool_param(colorbar, 'colorbar')
 
     if colorbar_ticks is not None:
         cbar_ticks = colorbar_ticks
@@ -343,24 +360,11 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         cbar_ticks = [None] * num_plots
 
     # LOG ----------------------------------------------------------------------
-    if log:
+    logscale = check_bool_param(log, 'log')
+    if any(logscale):
         # Showing bad/nan pixels with the darkest color in current colormap
         current_cmap = mplcm.get_cmap()
         current_cmap.set_bad(current_cmap.colors[0])
-        logscale = log
-        if not isinstance(logscale, tuple):
-            logscale = [log] * num_plots
-        else:
-            if not num_plots == len(logscale):
-                raise ValueError('`log` does not contain enough items')
-    else:
-        logscale = [False] * num_plots
-
-    # VMIN/VMAX ----------------------------------------------------------------
-    if vmin is None:
-        vmin = [None] * num_plots
-    if vmax is None:
-        vmax = [vmax] * num_plots
 
     # --------------------------------------------------------------------------
     if backend == 'matplotlib':
@@ -408,9 +412,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 else:
                     cucmap = custom_cmap[i]
                     cbticks = cbar_ticks[i]
-                im = ax.imshow(image, cmap=cucmap, origin='lower',
+                im = ax.imshow(image, cmap=cucmap, origin='lower', norm=norm,
                                interpolation='nearest', vmin=vmin[i],
-                               vmax=vmax[i], norm=norm)
+                               vmax=vmax[i])
 
             else:
                 # Leave the import to make porjection='3d' work
@@ -428,7 +432,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 if title is not None:
                     ax.set_title(title)
 
-            if ang_legend and plot_mosaic:
+            if ang_legend[i] and plot_mosaic:
                 scaleng = 1. / pxscale
                 scalab = '1 arcsec'
                 scalabloc = scaleng / 2. - 8
