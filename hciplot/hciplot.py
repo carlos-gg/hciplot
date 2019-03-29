@@ -64,10 +64,10 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     rows : int, optional
         How many rows (subplots in a grid) in the case ``data`` is a tuple of
         2d arrays.
-    vmax : None, float or int, optional
+    vmax : None, float/int or tuple of float/int, optional
         For defining the data range that the colormap covers. When set to None,
         the colormap covers the complete value range of the supplied data.
-    vmin : None, float or int, optional
+    vmin : None, float/int or tuple of float/int, optional
         For stretching the displayed pixels values. When set to None,
         the colormap covers the complete value range of the supplied data.
     circle : None, tuple or tuple of tuples, optional
@@ -100,35 +100,35 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         5 by default.
     label_size : int, optional
         [backend='matplotlib'] Size of the labels font.
-    grid : bool, optional
+    grid : bool or tuple of bools, optional
         [backend='matplotlib'] If True, a grid is displayed over the image, off
         by default.
-    grid_alpha : float, optional
+    grid_alpha : None, float/int or tuple of None/float/int, optional
         [backend='matplotlib'] Alpha transparency of the grid.
     grid_color : str, optional
         [backend='matplotlib'] Color of the grid lines.
-    grid_spacing : int, optional
+    grid_spacing : None, float/int or tuple of None/float/int, optional
         [backend='matplotlib'] Separation of the grid lines in pixels.
     cross : None or tuple of floats, optional
         [backend='matplotlib'] If provided, a crosshair is displayed at given
         pixel coordinates.
     cross_alpha : float, optional
         [backend='matplotlib'] Alpha transparency of the crosshair.
-    ang_scale : bool, optional
+    ang_scale : bool or tuple of bools, optional
         [backend='matplotlib'] If True, the axes are displayed in angular scale
         (arcsecs).
     ang_ticksep : int, optional
         [backend='matplotlib'] Separation for the ticks when using axis in
         angular scale.
-    pxscale : float
+    pxscale : float, optional
         [backend='matplotlib'] Pixel scale in arcseconds/px. Default 0.01
         (Keck/NIRC2, SPHERE-IRDIS).
-    ang_legend : bool, optional
+    ang_legend : bool or tuple of bools, optional
         [backend='matplotlib'] If True a scaling bar (1 arcsec or 500 mas) will
         be added on the bottom-right corner of the subplots.
     axis : bool, optional
         [backend='matplotlib'] Show the axis, on by default.
-    show_center : bool, optional
+    show_center : bool or tuple of bools, optional
         [backend='matplotlib'] To show a crosshair at the center of the frame.
     cmap : None, str or tuple of str, optional
         Colormap to be used. When None, the value of the global variable
