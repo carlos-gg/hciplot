@@ -12,14 +12,23 @@ session on a remote machine) is far from easy.
 
 ``HCIplot`` contains two functions, ``plot_frames`` and ``plot_cubes``,
 and relies on the ``matplotlib`` and ``HoloViews`` libraries and 
-``ImageMagick``. With ``HCIplot`` you can:
+``ImageMagick``. ``HCIplot`` allows to:
 
-* plot a single frame (2d array) or create a mosaic of frames,  
-* annotate and save publication ready frames/mosaics,
-* visualize 2d arrays as surface plots,
-* create interactive plots when handling 3d or 4d arrays (thanks to 
-``HoloViews``),
-* save to disk a 3d array as an animation (gif or mp4).
+* Plot a single frame (2d array) or create a mosaic of frames.
+
+![mosaic](https://github.com/carlgogo/carlgogo.github.io/blob/master/assets/images/hciplot.png?raw=true)
+  
+* Annotate and save publication ready frames/mosaics.
+
+* Visualize 2d arrays as surface plots.
+
+* Create interactive plots when handling 3d or 4d arrays (thanks to 
+``HoloViews``)
+
+![datacube](https://github.com/carlgogo/carlgogo.github.io/blob/master/assets/images/hciplot2.png?raw=true)
+
+* Save to disk a 3d array as an animation (gif or mp4).
+
 
 ## Installation
 
