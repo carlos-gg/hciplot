@@ -228,18 +228,22 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     # --------------------------------------------------------------------------
 
     # Checking inputs: a frame (1 or 3 channels) or tuple of them
+    msg_data_type = "`data` must be a frame (2d array) or tuple of frames"
     if isinstance(data, np.ndarray):
         if data.ndim == 2:
             data = [data]
         elif data.ndim == 3:
-            raise TypeError("`data` must be a frame or tuple of frames")
+            raise TypeError(msg_data_type)
     elif isinstance(data, tuple):
         for i in range(len(data)):
             # checking the elements are 2d (excepting the case of 3 channels)
             if not data[i].ndim == 2 and data[i].shape[2] != 3:
-                raise ValueError("`data` must be a frame or tuple of frames")
+                raise ValueError(msg_data_type)
     else:
-        raise ValueError("`data` must be a frame or tuple of frames")
+        raise ValueError(msg_data_type)
+
+    if not isinstance(backend, str):
+        raise TypeError('`backend` must be a string. ' + msg_data_type)
 
     if backend == 'bokeh':
         if mode == 'surface':
@@ -372,7 +376,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         fig = figure(figsize=(cols * size_factor, rows * size_factor), dpi=dpi)
 
         if title is not None:
-            fig.suptitle(title, fontsize=14)
+            fig.suptitle(title, fontsize=28, va='center', x=0.5, y=0.92)
 
         if mode == 'surface':
             plot_mosaic = False
