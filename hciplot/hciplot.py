@@ -92,7 +92,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     arrow_shiftx : int, optional
         [backend='matplotlib'] Shift in x of the arrow pointing position, 5 px
         by default.
-    label : None, str or list of str, optional
+    label : None, str or list of str/None, optional
         [backend='matplotlib'] Text for labeling each subplot. The label is
         shown at the bottom-left corner if each subplot.
     label_pad : int, optional
@@ -482,7 +482,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                          head_length=4, width=2, length_includes_head=True,
                          alpha=arrow_alpha)
 
-            if label is not None and plot_mosaic:
+            if label[i] is not None and plot_mosaic:
                 ax.annotate(label[i], xy=(label_pad, label_pad), color='white',
                             xycoords='axes pixels', weight='bold',
                             size=label_size)
