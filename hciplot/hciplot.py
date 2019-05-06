@@ -15,7 +15,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.cm import register_cmap
 import matplotlib.colors as colors
 import matplotlib.cm as mplcm
-
+import warnings
+warnings.filterwarnings("ignore", module="matplotlib")
 
 # Registering heat and cool colormaps from SaoImage DS9
 # borrowed from: https://gist.github.com/adonath/c9a97d2f2d964ae7b9eb
