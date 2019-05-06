@@ -10,7 +10,7 @@ from holoviews import opts
 from subprocess import call
 from matplotlib.pyplot import (figure, subplot, show, Circle, savefig, close,
                                hlines, annotate)
-from matplotlib.pyplot import colorbar as mplcbar
+from matplotlib.pyplot import colorbar as plt_colorbar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.cm import register_cmap
 import matplotlib.colors as colors
@@ -391,11 +391,10 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
             cy = image.shape[0] / 2 - 0.5
             cx = image.shape[1] / 2 - 0.5
             v += 1
-            ax = subplot(rows, cols, v)
-            ax.set_aspect('equal')
 
             if plot_mosaic:
                 ax = subplot(rows, cols, v)
+                ax.set_aspect('equal')
 
                 if logscale[i]:
                     image += np.abs(image.min())
@@ -410,31 +409,48 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 if image.dtype == bool:
                     image = image.astype(int)
 
-                if custom_cmap[i] == 'binary':
+                if custom_cmap[i] == 'binary' and image.max() == 1 and \
+                   image.min() == 0:
                     cucmap = cmap_binary
                     cbticks = (0, 0.5, 1)
+
                 else:
                     cucmap = custom_cmap[i]
                     cbticks = cbar_ticks[i]
+
                 im = ax.imshow(image, cmap=cucmap, origin='lower', norm=norm,
                                interpolation='nearest', vmin=vmin[i],
                                vmax=vmax[i])
 
+                if colorbar[i]:
+                    divider = make_axes_locatable(ax)
+                    # the width of cax is 5% of ax and the padding between cax
+                    # and ax wis fixed at 0.05 inch
+                    cax = divider.append_axes("right", size="5%", pad=0.05)
+                    cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
+                                      ticks=cbticks)
+                    cb.outline.set_linewidth(0.1)
+                    cb.ax.tick_params(labelsize=8)
+
             else:
                 # Leave the import to make porjection='3d' work
                 from mpl_toolkits.mplot3d import Axes3D
-
                 x = np.outer(np.arange(0, frame_size, 1), np.ones(frame_size))
                 y = x.copy().T
                 ax = subplot(rows, cols, v, projection='3d')
-                ax.plot_surface(x, y, image, rstride=sampling, cstride=sampling,
-                                linewidth=2, cmap=custom_cmap[i],
-                                antialiased=True, vmin=vmin[i], vmax=vmax[i])
+                ax.set_aspect('equal')
+                surf = ax.plot_surface(x, y, image, rstride=sampling,
+                                       cstride=sampling, linewidth=2,
+                                       cmap=custom_cmap[i], antialiased=True,
+                                       vmin=vmin[i], vmax=vmax[i])
                 ax.set_xlabel('x')
                 ax.set_ylabel('y')
                 ax.dist = 10
                 if title is not None:
                     ax.set_title(title)
+
+                if colorbar[i]:
+                    fig.colorbar(surf, aspect=10, pad=0.05, fraction=0.04)
 
             if ang_legend[i] and plot_mosaic:
                 scaleng = 1. / pxscale
@@ -486,15 +502,6 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 ax.annotate(label[i], xy=(label_pad, label_pad), color='white',
                             xycoords='axes pixels', weight='bold',
                             size=label_size)
-
-            if colorbar[i] and plot_mosaic:
-                # create an axes to the right ax. The width of cax is 5% of ax
-                # and the padding between cax and ax wis fixed at 0.05 inch
-                divider = make_axes_locatable(ax)
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                cb = mplcbar(im, ax=ax, cax=cax, drawedges=False, ticks=cbticks)
-                cb.outline.set_linewidth(0.1)
-                cb.ax.tick_params(labelsize=8)
 
             if grid[i] and plot_mosaic:
                 if grid_spacing[i] is None:
