@@ -16,9 +16,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.cm import register_cmap
 import matplotlib.colors as colors
 from matplotlib.colors import LinearSegmentedColormap
-#import matplotlib.cm as mplcm
-#import warningsimport 
-#warnings.filterwarnings("ignore", module="matplotlib")
+import matplotlib.cm as mplcm
+import warnings
+warnings.filterwarnings("ignore", module="matplotlib")
 
 # Registering heat and cool colormaps from SaoImage DS9
 # borrowed from: https://gist.github.com/adonath/c9a97d2f2d964ae7b9eb
@@ -28,7 +28,6 @@ ds9cool = {'red': lambda v: 2 * v - 1,
 ds9heat = {'red': lambda v: np.interp(v, [0, 0.34, 1], [0, 1, 1]),
            'green': lambda v: np.interp(v, [0, 1], [0, 1]),
            'blue': lambda v: np.interp(v, [0, 0.65, 0.98, 1], [0, 0, 1, 1])}
-
 register_cmap(cmap=LinearSegmentedColormap('ds9cool', ds9cool))
 register_cmap(cmap=LinearSegmentedColormap('ds9heat', ds9heat))
 cmap_binary = colors.ListedColormap(['black', 'white'])
