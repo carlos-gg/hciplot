@@ -30,6 +30,7 @@ setup(
     license='MIT',
     author_email='valentinchrist@hotmail.com',
     url='https://github.com/carlgogo/hciplot',
+    download_url='https://github.com/carlgogo/hciplot/archive/refs/tags/v0.1.8.tar.gz',
     keywords=['plotting', 'hci', 'package'],
     install_requires=['numpy >= 1.16',
                       'matplotlib >= 2.2',
