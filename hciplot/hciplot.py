@@ -640,8 +640,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     labels_x.append(round(Decimal(t * (ang_ticksep * pxscale)),ndec))
                 ax.set_xticklabels(labels_x)
                 ax.set_yticklabels(labels_y)
-                ax.set_xlabel("arcsec", fontsize=label_size)
-                ax.set_ylabel("arcsec", fontsize=label_size)
+                ax.set_xlabel('\u0394RA["]', fontsize=label_size)
+                ax.set_ylabel('\u0394Dec["]', fontsize=label_size)
                 ax.tick_params(axis='both', which='major', labelsize=label_size)
             else:
                 ax.set_xlabel("x", fontsize=label_size)
