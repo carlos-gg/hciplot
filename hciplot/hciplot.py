@@ -36,7 +36,7 @@ default_cmap = 'viridis'
 
 def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 vmin=None, circle=None, circle_alpha=0.8, circle_color='white',
-                circle_linestyle='-', circle_radius=6, circle_label=False, circle_label_cust=False,
+                circle_linestyle='-', circle_radius=6, circle_label=False, circle_label_color='white',
                 arrow=None, arrow_alpha=0.8, arrow_length=10, arrow_shiftx=5, 
                 arrow_label=None, label=None, label_pad=5, label_size=12, 
                 label_color='white',grid=False, grid_alpha=0.4,  grid_color='#f7f7f7', 
@@ -88,10 +88,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] Whether to show the coordinates next to each
         circle. If a string: the string to be printed. If a tuple, should be 
         a tuple of strings with same length as 'circle'.
-    circle_label_cust : bool, string or tuple of strings, optional
-        [backend='matplotlib'] New option to place custom labels on each circle.
-        If a string: the string to be printed. If a tuple, should be
-        a tuple of strings with same length as 'circle'.
+    circle_label_color : string, optional
+        [backend='matplotlib'] Default 'white'. Sets the color of the circle
+        label
     arrow : None or tuple of floats, optional
         [backend='matplotlib'] To show an arrow pointing to the given pixel
         coordinates.
@@ -543,18 +542,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                         else:
                             cirlabel = str(int(x))+','+str(int(y))
                         ax.text(x, y + circle_radius[j] + c_offset, cirlabel,
-                                fontsize=lab_fontsize, color='white', family='monospace',
-                                ha='center', va='center', weight='bold',
-                                alpha=circle_alpha[j])
-                    if circle_label_cust:
-                        x = coor_circle[j][0]
-                        y = coor_circle[j][1]
-                        if isinstance(circle_label_cust,str):
-                            cirlabel = circle_label_cust
-                        elif isinstance(circle_label_cust,tuple):
-                            cirlabel = circle_label_cust[j]
-                        ax.text(x, y + circle_radius[j] + c_offset, cirlabel,
-                                fontsize=lab_fontsize, color='white', family='monospace',
+                                fontsize=lab_fontsize, color=circle_label_color, family='monospace',
                                 ha='center', va='center', weight='bold',
                                 alpha=circle_alpha[j])
 
