@@ -337,6 +337,13 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         show_arrow = False
 
     # VMAX-VMIN ----------------------------------------------------------------
+    # if vmin is not None:
+    #     print(np.isnan(vmin))
+    #     if np.isnan(vmin):
+    #         vmin = np.nanmin(data)
+    # if vmax is not None:
+    #     if np.isnan(vmax):
+    #         vmax = np.nanmax(data)
     vmin = check_numeric_param(vmin, 'vmin')
     vmax = check_numeric_param(vmax, 'vmax')
 
@@ -429,7 +436,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 ax.set_aspect('equal')
 
                 if logscale[i]:
-                    image += np.abs(image.min())
+                    image += np.abs(np.nanmin(image))
                     if vmin[i] is None:
                         linthresh = 1e-2
                     else:
@@ -526,7 +533,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     c_offset = circle_linestyle[0]
                     circle_linestyle = circle_linestyle[1]
                 else:
-                    c_offset = 2
+                    c_offset = lab_fontsize+1  # vertical offset is equal to the font size + 1, was 2
                 for j in range(n_circ):
                     circ = Circle(coor_circle[j], radius=circle_radius[j],
                                   fill=False, color=circle_color,
