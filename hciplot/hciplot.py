@@ -662,14 +662,14 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         for i, v in enumerate(range(num_plots)):
             image = data[i].copy()
             if vmin[i] is None:
-                vmin_i = image.min()
+                vmin[i] = image.min()
             if vmax[i] is None:
-                vmax_i = image.max()
+                vmax[i] = image.max()
             im = hv.Image((range(image.shape[1]), range(image.shape[0]), image))
             subplots.append(im.opts(tools=['hover'], colorbar=colorbar[i],
                                     colorbar_opts={'width': 15},
                                     width=width, height=height,
-                                    clim=(vmin_i, vmax_i)))
+                                    clim=(vmin[i], vmax[i])))
 
         return hv.Layout(subplots).cols(cols)
 
