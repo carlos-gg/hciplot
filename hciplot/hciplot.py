@@ -441,7 +441,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                         linthresh = 1e-2
                     else:
                         linthresh = vmin[i]
-                    norm = colors.SymLogNorm(linthresh)
+                    norm = colors.SymLogNorm(linthresh, base=10)
                 else:
                     norm = None
 
