@@ -355,7 +355,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     show_center = check_bool_param(show_center, 'show_center')
     ang_scale = check_bool_param(ang_scale, 'ang_scale')
     ang_legend = check_bool_param(ang_legend, 'ang_legend')
-    au_legend = check_bool_param(au_legend, 'ang_legend')
+    au_legend = check_bool_param(au_legend, 'au_legend')
 
     if isinstance(grid_color, str):
         grid_color = [grid_color] * num_plots
