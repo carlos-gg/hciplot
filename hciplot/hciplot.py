@@ -423,7 +423,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
             if plot_mosaic:
                 ax = subplot(rows, cols, v)
-                ax.set_aspect('equal')
+                ax.set_aspect('auto')
 
                 if logscale[i]:
                     image += np.abs(image.min())
@@ -467,7 +467,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 x = np.outer(np.arange(0, frame_size, 1), np.ones(frame_size))
                 y = x.copy().T
                 ax = subplot(rows, cols, v, projection='3d')
-                ax.set_aspect('equal')
+                ax.set_aspect('auto')
                 surf = ax.plot_surface(x, y, image, rstride=sampling,
                                        cstride=sampling, linewidth=2,
                                        cmap=custom_cmap[i], antialiased=True,
