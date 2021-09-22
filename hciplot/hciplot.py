@@ -88,7 +88,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] Whether to show the coordinates next to each
         circle. If a string: the string to be printed. If a tuple, should be 
         a tuple of strings with same length as 'circle'.
-    circle_label_color : string, optional
+    circle_label_color : str, optional
         [backend='matplotlib'] Default 'white'. Sets the color of the circle
         label
     arrow : None or tuple of floats, optional
