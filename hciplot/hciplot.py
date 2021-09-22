@@ -337,6 +337,13 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         show_arrow = False
 
     # VMAX-VMIN ----------------------------------------------------------------
+    # if vmin is not None:
+    #     print(np.isnan(vmin))
+    #     if np.isnan(vmin):
+    #         vmin = np.nanmin(data)
+    # if vmax is not None:
+    #     if np.isnan(vmax):
+    #         vmax = np.nanmax(data)
     vmin = check_numeric_param(vmin, 'vmin')
     vmax = check_numeric_param(vmax, 'vmax')
 
