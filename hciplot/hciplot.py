@@ -36,7 +36,7 @@ default_cmap = 'viridis'
 
 def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 vmin=None, circle=None, circle_alpha=0.8, circle_color='white',
-                circle_linestyle='-', circle_radius=6, circle_label=False, 
+                circle_linestyle='-', circle_radius=6, circle_label=False, circle_label_color='white',
                 arrow=None, arrow_alpha=0.8, arrow_length=10, arrow_shiftx=5, 
                 arrow_label=None, label=None, label_pad=5, label_size=12, 
                 label_color='white',grid=False, grid_alpha=0.4,  grid_color='#f7f7f7', 
@@ -88,6 +88,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] Whether to show the coordinates next to each
         circle. If a string: the string to be printed. If a tuple, should be 
         a tuple of strings with same length as 'circle'.
+    circle_label_color : str, optional
+        [backend='matplotlib'] Default 'white'. Sets the color of the circle
+        label
     arrow : None or tuple of floats, optional
         [backend='matplotlib'] To show an arrow pointing to the given pixel
         coordinates.
@@ -426,12 +429,12 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 ax.set_aspect('auto')
 
                 if logscale[i]:
-                    image += np.abs(image.min())
+                    image += np.abs(np.nanmin(image))
                     if vmin[i] is None:
                         linthresh = 1e-2
                     else:
                         linthresh = vmin[i]
-                    norm = colors.SymLogNorm(linthresh)
+                    norm = colors.SymLogNorm(linthresh, base=10)
                 else:
                     norm = None
 
@@ -523,7 +526,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     c_offset = circle_linestyle[0]
                     circle_linestyle = circle_linestyle[1]
                 else:
-                    c_offset = 2
+                    c_offset = lab_fontsize+1  # vertical offset is equal to the font size + 1, was 2
                 for j in range(n_circ):
                     if isinstance(circle_color, (list, tuple)):
                         circle_color_tmp = circle_color[j]
@@ -547,7 +550,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                         else:
                             cirlabel = str(int(x))+','+str(int(y))
                         ax.text(x, y + circle_radius[j] + c_offset, cirlabel,
-                                fontsize=lab_fontsize, color='white', family='monospace',
+                                fontsize=lab_fontsize, color=circle_label_color, family='monospace',
                                 ha='center', va='center', weight='bold',
                                 alpha=circle_alpha[j])
 
@@ -631,8 +634,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     labels_x.append(round(Decimal(t * (ang_ticksep * pxscale)),ndec))
                 ax.set_xticklabels(labels_x)
                 ax.set_yticklabels(labels_y)
-                ax.set_xlabel("arcsec", fontsize=label_size)
-                ax.set_ylabel("arcsec", fontsize=label_size)
+                ax.set_xlabel('\u0394RA["]', fontsize=label_size)
+                ax.set_ylabel('\u0394Dec["]', fontsize=label_size)
                 ax.tick_params(axis='both', which='major', labelsize=label_size)
             else:
                 ax.set_xlabel("x", fontsize=label_size)
@@ -658,14 +661,14 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         for i, v in enumerate(range(num_plots)):
             image = data[i].copy()
             if vmin[i] is None:
-                vmin_i = image.min()
+                vmin[i] = image.min()
             if vmax[i] is None:
-                vmax_i = image.max()
+                vmax[i] = image.max()
             im = hv.Image((range(image.shape[1]), range(image.shape[0]), image))
             subplots.append(im.opts(tools=['hover'], colorbar=colorbar[i],
                                     colorbar_opts={'width': 15},
                                     width=width, height=height,
-                                    clim=(vmin_i, vmax_i)))
+                                    clim=(vmin[i], vmax[i])))
 
         return hv.Layout(subplots).cols(cols)
 
