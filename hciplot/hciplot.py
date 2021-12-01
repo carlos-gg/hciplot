@@ -525,9 +525,17 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 else:
                     c_offset = 2
                 for j in range(n_circ):
+                    if isinstance(circle_color, (list, tuple)):
+                        circle_color_tmp = circle_color[j]
+                    else:
+                        circle_color_tmp = circle_color
+                    if isinstance(circle_linestyle, (list, tuple)):
+                        circle_linestyle_tmp = circle_linestyle[j]
+                    else:
+                        circle_linestyle_tmp = circle_linestyle
                     circ = Circle(coor_circle[j], radius=circle_radius[j],
-                                  fill=False, color=circle_color,
-                                  alpha=circle_alpha[j], ls=circle_linestyle)
+                                  fill=False, color=circle_color_tmp,
+                                  alpha=circle_alpha[j], ls=circle_linestyle_tmp)
                     ax.add_artist(circ)
                     if circle_label:                  
                         x = coor_circle[j][0]
@@ -548,8 +556,6 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                            linestyle='dashed', color='white')
                 ax.axvline(coor_cross[1], ymin=0, ymax=frame_size, alpha=cross_alpha, lw=0.6,
                            linestyle='dashed', color='white')
-#                ax.scatter([coor_cross[0]], [coor_cross[1]], marker='+',
-#                           color=cross_color, alpha=cross_alpha)
 
             if show_center[i] and plot_mosaic:
                 ax.scatter([cy], [cx], marker='+',
