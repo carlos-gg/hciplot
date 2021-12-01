@@ -3,11 +3,21 @@
 import os
 import re
 from setuptools import setup
-
+try:  # pip >= 10
+    from pip._internal.req import parse_requirements
+except ImportError:  # pip <= 9.0.3
+    from pip.req import parse_requirements
 
 def resource(*args):
     return os.path.join(os.path.abspath(os.path.join(__file__, os.pardir)),
                         *args)
+
+# parse_requirements() returns generator of pip.req.InstallRequirement objects
+reqs = parse_requirements(resource('requirements.txt'), session=False)
+try:
+    reqs = [str(ir.req) for ir in reqs]
+except:
+    reqs = [str(ir.requirement) for ir in reqs]
 
 
 with open(resource('hciplot', '__init__.py')) as version_file:
@@ -32,10 +42,7 @@ setup(
     url='https://github.com/carlgogo/hciplot',
     download_url='https://github.com/carlgogo/hciplot/archive/refs/tags/v0.1.8.tar.gz',
     keywords=['plotting', 'hci', 'package'],
-    install_requires=['numpy >= 1.16',
-                      'matplotlib >= 2.2',
-                      'bokeh >=1.0',
-                      'holoviews >= 1.11'],
+    install_requires=reqs,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -45,8 +52,6 @@ setup(
         'Natural Language :: English',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering :: Astronomy'],
 )
