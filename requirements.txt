@@ -1,5 +1,5 @@
 numpy
-matplotlib
+matplotlib<=3.4.3
 holoviews
 bokeh==2.4.1
 panel
