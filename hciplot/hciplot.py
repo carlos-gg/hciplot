@@ -655,8 +655,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     elif backend == 'bokeh':
         hv.extension(backend)
         subplots = []
-        options = "Image (cmap='" + custom_cmap[0] + "')"  # taking first item
-        hv.opts(options)
+        # options = "Image (cmap='" + custom_cmap[0] + "')"  # taking first item
+        # hv.opts(options)
 
         for i, v in enumerate(range(num_plots)):
             image = data[i].copy()
@@ -668,7 +668,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
             subplots.append(im.opts(tools=['hover'], colorbar=colorbar[i],
                                     colorbar_opts={'width': 15},
                                     width=width, height=height,
-                                    clim=(vmin[i], vmax[i])))
+                                    clim=(vmin[i], vmax[i]),
+                                    cmap=custom_cmap[0]))
 
         return hv.Layout(subplots).cols(cols)
 
@@ -807,15 +808,17 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
             # keywords in the currently active 'matplotlib' renderer are:
             # 'alpha', 'clims', 'cmap', 'filterrad', 'interpolation', 'norm',
             # 'visible'
-            options = "Image (cmap='" + cmap + "', interpolation='nearest',"
-            options += " clims=("+str(vmin)+','+str(vmax)+")"+")"
-            opts(options, image_stack)
-            return image_stack.opts(opts.Image(colorbar=colorbar))
+            #options = "Image (cmap='" + cmap + "', interpolation='nearest',"
+            #options += " clims=("+str(vmin)+','+str(vmax)+")"+")"
+            #opts(options, image_stack)
+            return image_stack.opts(opts.Image(colorbar=colorbar,
+                                               cmap=cmap,
+                                               clim=(vmin, vmax)))
             # hv.save(image_stack, 'holomap.gif', fps=5)
 
         elif backend == 'bokeh':
-            options = "Image (cmap='" + cmap + "')"
-            opts(options, image_stack)
+            #options = "Image (cmap='" + cmap + "')"
+            #opts(options, image_stack)
             # Compensating the width to accommodate the colorbar
             if colorbar:
                 cb_wid = 15
@@ -836,6 +839,7 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
                                                               'padding': 3},
                                                width=width_, height=height,
                                                clim=(vmin, vmax),
+                                               cmap=cmap,
                                                tools=['hover']))
 
     elif mode == 'animation':
