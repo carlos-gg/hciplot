@@ -36,15 +36,16 @@ default_cmap = 'viridis'
 
 def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 vmin=None, circle=None, circle_alpha=0.8, circle_color='white',
-                circle_linestyle='-', circle_radius=6, circle_label=False, circle_label_color='white',
-                arrow=None, arrow_alpha=0.8, arrow_length=10, arrow_shiftx=5, 
-                arrow_label=None, label=None, label_pad=5, label_size=12, 
-                label_color='white',grid=False, grid_alpha=0.4,  grid_color='#f7f7f7', 
-                grid_spacing=None, cross=None, cross_alpha=0.4, lab_fontsize=8,
-                cross_color='white', ang_scale=False, ang_ticksep=50, ndec=1, 
-                pxscale=0.01, auscale=1., ang_legend=False, au_legend=False, 
-                axis=True, show_center=False, cmap=None, log=False, 
-                colorbar=True, colorbar_ticks=None, dpi=100, size_factor=6, 
+                circle_linestyle='-', circle_radius=6, circle_label=False,
+                circle_label_color='white', arrow=None, arrow_alpha=0.8,
+                arrow_length=10, arrow_shiftx=5, arrow_label=None, label=None,
+                label_pad=5, label_size=12, label_color='white',grid=False,
+                grid_alpha=0.4,  grid_color='#f7f7f7', grid_spacing=None,
+                cross=None, cross_alpha=0.4, lab_fontsize=8, cross_color='white',
+                ang_scale=False, ang_ticksep=50, ndec=1, pxscale=0.01,
+                auscale=1., ang_legend=False, au_legend=False, axis=True,
+                show_center=False, cmap=None, log=False, colorbar=True,
+                colorbar_ticks=None, colorbar_fontsize=8, dpi=100, size_factor=6,
                 horsp=0.4, versp=0.2, width=400, height=400, title=None, 
                 tit_size=16, sampling=1, save=None, transparent=False):
     """ Plot a 2d array or a tuple of 2d arrays. Supports the ``matplotlib`` and
@@ -162,6 +163,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         To attach a colorbar, on by default.
     colorbar_ticks : None, tuple or tuple of tuples, optional
         [backend='matplotlib'] Custom ticks for the colorbar of each plot.
+    colorbar_fontsize : int, optional
+        [backend='matplotlib'] Sets the font size for the colorbar ticks.
+        Default is 8.
     dpi : int, optional
         [backend='matplotlib'] Dots per inch, determines how many pixels the
         figure comprises (which affects the plot quality).
@@ -462,7 +466,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
                                       ticks=cbticks)
                     cb.outline.set_linewidth(0.1)
-                    cb.ax.tick_params(labelsize=8)
+                    cb.ax.tick_params(labelsize=colorbar_fontsize)
 
             else:
                 # Leave the import to make porjection='3d' work
@@ -646,7 +650,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
         fig.subplots_adjust(wspace=horsp, hspace=versp)
         if save is not None and isinstance(save, str):
-            savefig(save, dpi=dpi, bbox_inches='tight', pad_inches=0,
+            savefig(save, dpi=dpi, bbox_inches='tight', pad_inches=0.01,
                     transparent=transparent)
             close()
         else:
