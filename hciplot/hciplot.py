@@ -462,7 +462,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
                                       ticks=cbticks)
                     cb.outline.set_linewidth(0.1)
-                    cb.ax.tick_params(labelsize=8)
+                    cb.ax.tick_params(labelsize=lab_fontsize)
 
             else:
                 # Leave the import to make porjection='3d' work
