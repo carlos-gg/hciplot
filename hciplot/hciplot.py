@@ -103,7 +103,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         by default.
     arrow_label : bool or string, optional
         [backend='matplotlib'] Label to be printed next to the arrow.
-    label : None, str or list of str/None, optional
+    label : None, str or tuple of str/None, optional
         [backend='matplotlib'] Text for labeling each subplot. The label is
         shown at the bottom-left corner if each subplot.
     label_pad : int or tuple of int, optional
