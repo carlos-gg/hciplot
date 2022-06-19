@@ -454,16 +454,18 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 im = ax.imshow(image, cmap=cucmap, origin='lower', norm=norm,
                                interpolation='nearest', vmin=vmin[i],
                                vmax=vmax[i])
-
-                if colorbar[i]:
-                    divider = make_axes_locatable(ax)
-                    # the width of cax is 5% of ax and the padding between cax
-                    # and ax wis fixed at 0.05 inch
-                    cax = divider.append_axes("right", size="5%", pad=0.05)
-                    cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
-                                      ticks=cbticks)
-                    cb.outline.set_linewidth(0.1)
-                    cb.ax.tick_params(labelsize=lab_fontsize)
+                # if colorbar[i]:
+                #     divider = make_axes_locatable(ax)
+                #     # the width of cax is 5% of ax and the padding between cax
+                #     # and ax wis fixed at 0.05 inch
+                #     cax = divider.append_axes("right", size="5%", pad=0.05)
+                #     cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
+                #                       ticks=cbticks)
+                #     cb.outline.set_linewidth(0.1)
+                #     cb.ax.tick_params(labelsize=lab_fontsize)
+                #     cbw = frame_size/10
+                # else:
+                #     cbw = 0
 
             else:
                 # Leave the import to make porjection='3d' work
@@ -500,7 +502,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                        linestyles='solid')
                 annotate(scalab, (xmi + scalabloc, scapad + 2), color='white', 
                          size=label_size)
-            elif au_legend[i] and plot_mosaic:
+            if au_legend[i] and plot_mosaic:
                 pxsc_fac = (0.012265/pxscale)
                 labsz_fac = (label_size/12)
                 scaleng = 50. / auscale
@@ -517,8 +519,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 scapad = 5*pxsc_fac*labsz_fac
                 xma = frame_size - scapad
                 xmi = xma - scaleng
-                hlines(y=xma-scapad, xmin=xmi, xmax=xma, colors='white', lw=1.,
-                       linestyles='solid')
+                hlines(y=xma-scapad, xmin=xmi, xmax=xma, colors='white', 
+                       lw=1., linestyles='solid')
                 annotate(scalab, (xmi + scalabloc, xma-0.5*scapad), 
                          color='white', size=label_size)
                 
@@ -644,6 +646,16 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
             if not axis[i]:
                 ax.set_axis_off()
+                
+            if colorbar[i]:
+                divider = make_axes_locatable(ax)
+                # the width of cax is 5% of ax and the padding between cax
+                # and ax wis fixed at 0.05 inch
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
+                                  ticks=cbticks)
+                cb.outline.set_linewidth(0.1)
+                cb.ax.tick_params(labelsize=lab_fontsize)
 
         fig.subplots_adjust(wspace=horsp, hspace=versp)
         if save is not None and isinstance(save, str):
