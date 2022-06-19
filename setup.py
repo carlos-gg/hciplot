@@ -16,8 +16,6 @@ except ImportError:
         # pip <= 9.0.3
         from pip.download import PipSession
         from pip.req import parse_requirements
-from setuptools.command.install import install
-from setuptools.command.develop import develop
 
 def resource(*args):
     return os.path.join(os.path.abspath(os.path.join(__file__, os.pardir)),
@@ -25,11 +23,7 @@ def resource(*args):
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 reqs = parse_requirements(resource('requirements.txt'), session=PipSession)
-requirements = [str(ir.requirement) for ir in reqs]    
-
-reqs_dev = parse_requirements(resource('requirements-dev.txt'), 
-                              session=PipSession)
-requirements_dev = [str(ir.requirement) for ir in reqs_dev]  
+requirements = [str(ir.requirement) for ir in reqs]
 
 
 with open(resource('hciplot', '__init__.py')) as version_file:
