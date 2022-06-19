@@ -1,4 +1,4 @@
-__author__ = 'Carlos Alberto Gomez Gonzalez'
+__author__ = 'Carlos Alberto Gomez Gonzalez, Valentin Christiaens'
 __all__ = ['plot_frames',
            'plot_cubes']
 
@@ -16,7 +16,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.cm import register_cmap
 import matplotlib.colors as colors
 from matplotlib.colors import LinearSegmentedColormap
-import matplotlib.cm as mplcm
+#import matplotlib.cm as mplcm
 import warnings
 warnings.filterwarnings("ignore", module="matplotlib")
 
@@ -36,17 +36,18 @@ default_cmap = 'viridis'
 
 def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 vmin=None, circle=None, circle_alpha=0.8, circle_color='white',
-                circle_linestyle='-', circle_radius=6, circle_label=False, circle_label_color='white',
-                arrow=None, arrow_alpha=0.8, arrow_length=10, arrow_shiftx=5, 
-                arrow_label=None, label=None, label_pad=5, label_size=12, 
-                label_color='white',grid=False, grid_alpha=0.4,  grid_color='#f7f7f7', 
-                grid_spacing=None, cross=None, cross_alpha=0.4, lab_fontsize=8,
-                cross_color='white', ang_scale=False, ang_ticksep=50, ndec=1, 
-                pxscale=0.01, auscale=1., ang_legend=False, au_legend=False, 
-                axis=True, show_center=False, cmap=None, log=False, 
-                colorbar=True, colorbar_ticks=None, dpi=100, size_factor=6, 
-                horsp=0.4, versp=0.2, width=400, height=400, title=None, 
-                tit_size=16, sampling=1, save=None, transparent=False):
+                circle_linestyle='-', circle_radius=6, circle_label=False, 
+                circle_label_color='white', arrow=None, arrow_alpha=0.8, 
+                arrow_length=10, arrow_shiftx=5, arrow_label=None, label=None, 
+                label_pad=5, label_size=12, label_color='white',grid=False,
+                grid_alpha=0.4,  grid_color='#f7f7f7', grid_spacing=None, 
+                cross=None, cross_alpha=0.4, lab_fontsize=8, cross_color='white', 
+                ang_scale=False, ang_ticksep=50, ndec=1, pxscale=0.01, 
+                auscale=1., ang_legend=False, au_legend=False, axis=True, 
+                show_center=False, cmap=None, log=False, colorbar=True, 
+                colorbar_ticks=None, dpi=100, size_factor=6, horsp=0.4, 
+                versp=0.2, width=400, height=400, title=None, tit_size=16, 
+                sampling=1, save=None, transparent=False):
     """ Plot a 2d array or a tuple of 2d arrays. Supports the ``matplotlib`` and
     ``bokeh`` backends. When having a tuple of 2d arrays, the plot turns into a
     mosaic. For ``matplotlib``, instead of a mosaic of images, we can create a
@@ -453,16 +454,18 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 im = ax.imshow(image, cmap=cucmap, origin='lower', norm=norm,
                                interpolation='nearest', vmin=vmin[i],
                                vmax=vmax[i])
-
-                if colorbar[i]:
-                    divider = make_axes_locatable(ax)
-                    # the width of cax is 5% of ax and the padding between cax
-                    # and ax wis fixed at 0.05 inch
-                    cax = divider.append_axes("right", size="5%", pad=0.05)
-                    cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
-                                      ticks=cbticks)
-                    cb.outline.set_linewidth(0.1)
-                    cb.ax.tick_params(labelsize=lab_fontsize)
+                # if colorbar[i]:
+                #     divider = make_axes_locatable(ax)
+                #     # the width of cax is 5% of ax and the padding between cax
+                #     # and ax wis fixed at 0.05 inch
+                #     cax = divider.append_axes("right", size="5%", pad=0.05)
+                #     cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
+                #                       ticks=cbticks)
+                #     cb.outline.set_linewidth(0.1)
+                #     cb.ax.tick_params(labelsize=lab_fontsize)
+                #     cbw = frame_size/10
+                # else:
+                #     cbw = 0
 
             else:
                 # Leave the import to make porjection='3d' work
@@ -499,7 +502,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                        linestyles='solid')
                 annotate(scalab, (xmi + scalabloc, scapad + 2), color='white', 
                          size=label_size)
-            elif au_legend[i] and plot_mosaic:
+            if au_legend[i] and plot_mosaic:
                 pxsc_fac = (0.012265/pxscale)
                 labsz_fac = (label_size/12)
                 scaleng = 50. / auscale
@@ -516,8 +519,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 scapad = 5*pxsc_fac*labsz_fac
                 xma = frame_size - scapad
                 xmi = xma - scaleng
-                hlines(y=xma-scapad, xmin=xmi, xmax=xma, colors='white', lw=1.,
-                       linestyles='solid')
+                hlines(y=xma-scapad, xmin=xmi, xmax=xma, colors='white', 
+                       lw=1., linestyles='solid')
                 annotate(scalab, (xmi + scalabloc, xma-0.5*scapad), 
                          color='white', size=label_size)
                 
@@ -643,6 +646,16 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
             if not axis[i]:
                 ax.set_axis_off()
+                
+            if colorbar[i]:
+                divider = make_axes_locatable(ax)
+                # the width of cax is 5% of ax and the padding between cax
+                # and ax wis fixed at 0.05 inch
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
+                                  ticks=cbticks)
+                cb.outline.set_linewidth(0.1)
+                cb.ax.tick_params(labelsize=lab_fontsize)
 
         fig.subplots_adjust(wspace=horsp, hspace=versp)
         if save is not None and isinstance(save, str):
