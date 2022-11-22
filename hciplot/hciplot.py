@@ -16,7 +16,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.cm import register_cmap
 import matplotlib.colors as colors
 from matplotlib.colors import LinearSegmentedColormap
-#import matplotlib.cm as mplcm
 import warnings
 warnings.filterwarnings("ignore", module="matplotlib")
 
@@ -39,15 +38,17 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 circle_linestyle='-', circle_radius=6, circle_label=False, 
                 circle_label_color='white', arrow=None, arrow_alpha=0.8, 
                 arrow_length=10, arrow_shiftx=5, arrow_label=None, label=None, 
-                label_pad=5, label_size=12, label_color='white',grid=False,
-                grid_alpha=0.4,  grid_color='#f7f7f7', grid_spacing=None, 
-                cross=None, cross_alpha=0.4, lab_fontsize=8, cross_color='white', 
-                ang_scale=False, ang_ticksep=50, ndec=1, pxscale=0.01, 
-                auscale=1., ang_legend=False, au_legend=False, axis=True, 
-                show_center=False, cmap=None, log=False, colorbar=True, 
-                colorbar_ticks=None, dpi=100, size_factor=6, horsp=0.4, 
-                versp=0.2, width=400, height=400, title=None, tit_size=16, 
-                sampling=1, save=None, transparent=False):
+                label_pad=5, label_size=12, label_color='white', grid=False,
+                grid_alpha=0.4, grid_color='#f7f7f7', grid_spacing=None,
+                cross=None, cross_alpha=0.4, cross_color='white',
+                ang_scale=False, ang_ticksep=50, tick_direction='out',
+                tick_color='black', ndec=1, pxscale=0.01, auscale=1.,
+                ang_legend=False, au_legend=False, axis=True,
+                show_center=False, cmap=None, log=False, colorbar=True,
+                colorbar_ticks=None, colorbar_ticksize=8, colorbar_label='',
+                colorbar_label_size=8, patch=None, dpi=100, size_factor=6, horsp=0.4,
+                versp=0.2, width=400, height=400, title=None, tit_size=16,
+                sampling=1, save=None, return_fig_ax=False, transparent=False):
     """ Plot a 2d array or a tuple of 2d arrays. Supports the ``matplotlib`` and
     ``bokeh`` backends. When having a tuple of 2d arrays, the plot turns into a
     mosaic. For ``matplotlib``, instead of a mosaic of images, we can create a
@@ -106,12 +107,14 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] Label to be printed next to the arrow.
     label : None, str or tuple of str/None, optional
         [backend='matplotlib'] Text for labeling each subplot. The label is
-        shown at the bottom-left corner if each subplot.
+        shown in the bottom-left corner if each subplot.
     label_pad : int or tuple of int, optional
         [backend='matplotlib'] Padding of the label from the left bottom corner.
         5 by default. If a tuple, sets the padding in x and y.
     label_size : int, optional
         [backend='matplotlib'] Size of the labels font.
+    label_color : str, optional
+        [backend='matplotlib'] Color of labels font.
     grid : bool or tuple of bools, optional
         [backend='matplotlib'] If True, a grid is displayed over the image, off
         by default.
@@ -134,6 +137,11 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     ang_ticksep : int, optional
         [backend='matplotlib'] Separation for the ticks when using axis in
         angular scale.
+    tick_direction : str, optional
+        [backend='matplotlib'] Outward or inward facing axis ticks.
+        'in' for inward, 'out' for outwards.
+    tick_color : str, optional
+        [backend='matplotlib'] Color of the axis ticks.
     ndec : int, optional
         [backend='matplotlib'] Number of decimals for axes labels.
     pxscale : float, optional
@@ -143,10 +151,10 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] Pixel scale in au/px. Default 1.
     ang_legend : bool or tuple of bools, optional
         [backend='matplotlib'] If True a scaling bar (1 arcsec or 500 mas) will
-        be added on the bottom-right corner of the subplots.
+        be added in the bottom-right corner of the subplots.
     au_legend : bool or tuple of bools, optional
         [backend='matplotlib'] If True (and ang_legend is False) a scaling bar 
-        (10 au, 20 au or 50 au) will be added on the top-right corner of the 
+        (10 au, 20 au or 50 au) will be added in the top-right corner of the
         subplots.
     axis : bool, optional
         [backend='matplotlib'] Show the axis, on by default.
@@ -163,6 +171,16 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         To attach a colorbar, on by default.
     colorbar_ticks : None, tuple or tuple of tuples, optional
         [backend='matplotlib'] Custom ticks for the colorbar of each plot.
+    colorbar_ticksize : int, optional
+        [backend='matplotlib'] Font size for colorbar ticks.
+    colorbar_label : str, optional
+        [backend='matplotlib'] Text displayed next to the colorbar.
+    colorbar_label_size : int, optional
+        [backend='matplotlib'] Font size for ``colorbar_label``.
+    patch : float, optional
+        [backend='matplotlib'] Diameter of a circular patch added to the
+        bottom-left of the figure to represent a beam or FWHM. For example,
+        use 5.2 to represent a FWHM of 5.2 pixels. None otherwise.
     dpi : int, optional
         [backend='matplotlib'] Dots per inch, determines how many pixels the
         figure comprises (which affects the plot quality).
@@ -188,6 +206,11 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     save : None or str, optional
         If a string is provided the plot is saved using ``save`` as the
         path/filename.
+    return_fig_ax : bool, optional
+        [backend='matplotlib'] If True and save is None, the function
+        returns figure, ax. Useful for modifying a figure after
+        calling ``plot_frames``. If False and save is None, the figure
+        is simply displayed on screen using show().
     transparent : bool, optional
         [save=True] Whether to have a transparent background between subplots.
         If False, then a white background is shown.
@@ -521,7 +544,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 xmi = xma - scaleng
                 hlines(y=xma-scapad, xmin=xmi, xmax=xma, colors='white', 
                        lw=1., linestyles='solid')
-                annotate(scalab, (xmi + scalabloc, xma-0.5*scapad), 
+                annotate(scalab, (xmi + scalabloc, xma-0.5*scapad),
                          color='white', size=label_size)
                 
             if show_circle and plot_mosaic:
@@ -529,7 +552,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     c_offset = circle_linestyle[0]
                     circle_linestyle = circle_linestyle[1]
                 else:
-                    c_offset = lab_fontsize+1  # vertical offset is equal to the font size + 1, was 2
+                    c_offset = label_size+1  # vertical offset is equal to the font size + 1, was 2
                 for j in range(n_circ):
                     if isinstance(circle_color, (list, tuple)):
                         circle_color_tmp = circle_color[j]
@@ -553,7 +576,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                         else:
                             cirlabel = str(int(x))+','+str(int(y))
                         ax.text(x, y + circle_radius[j] + c_offset, cirlabel,
-                                fontsize=lab_fontsize, color=circle_label_color, family='monospace',
+                                fontsize=label_size, color=circle_label_color, family='monospace',
                                 ha='center', va='center', weight='bold',
                                 alpha=circle_alpha[j])
 
@@ -582,7 +605,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     if len(arrlabel) < 5:
                         arr_fontsize=14
                     else:
-                        arr_fontsize=lab_fontsize
+                        arr_fontsize=label_size
                     ax.text(x + arrow_length + 1.3*arrow_shiftx, y, arrlabel,
                             fontsize=arr_fontsize, color='white', family='monospace',
                             ha='left', va='center', weight='bold',
@@ -637,9 +660,11 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     labels_x.append(round(Decimal(t * (ang_ticksep * pxscale)),ndec))
                 ax.set_xticklabels(labels_x)
                 ax.set_yticklabels(labels_y)
-                ax.set_xlabel('\u0394RA["]', fontsize=label_size)
-                ax.set_ylabel('\u0394Dec["]', fontsize=label_size)
-                ax.tick_params(axis='both', which='major', labelsize=label_size)
+                ax.set_xlabel('\u0394RA ["]', fontsize=label_size)
+                ax.set_ylabel('\u0394Dec ["]', fontsize=label_size)
+                ax.minorticks_on()
+                ax.tick_params(axis='both', which='both', labelsize=label_size, direction=tick_direction, color=tick_color)
+
             else:
                 ax.set_xlabel("x", fontsize=label_size)
                 ax.set_ylabel("y", fontsize=label_size)
@@ -655,15 +680,23 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
                                   ticks=cbticks)
                 cb.outline.set_linewidth(0.1)
-                cb.ax.tick_params(labelsize=lab_fontsize)
+                cb.ax.tick_params(labelsize=colorbar_ticksize)
+                if colorbar_label != '':
+                    cb.set_label(label=colorbar_label, fontsize=colorbar_label_size)
+
+            if patch is not None:
+                beam = Circle(xy=(frame_size/10, frame_size/6), radius=patch/2, color='grey', fill=True, alpha=1)
+                ax.add_artist(beam)
 
         fig.subplots_adjust(wspace=horsp, hspace=versp)
         if save is not None and isinstance(save, str):
             savefig(save, dpi=dpi, bbox_inches='tight', pad_inches=0,
                     transparent=transparent)
             close()
-        else:
+        elif return_fig_ax is False and save is None:
             show()
+        elif return_fig_ax and save is None:
+            return fig,ax
 
     elif backend == 'bokeh':
         hv.extension(backend)
