@@ -114,7 +114,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         5 by default. If a tuple, sets the padding in x and y.
     label_size : int, optional
         [backend='matplotlib'] Size of the labels font.
-    label_color : str, optional
+    label_color : string or tuple of strings, optional
         [backend='matplotlib'] Color of labels font.
     grid : bool or tuple of bools, optional
         [backend='matplotlib'] If True, a grid is displayed over the image, off
@@ -396,6 +396,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
     # LABEL --------------------------------------------------------------------
     label = check_str_param(label, 'label')
+    label_color = check_str_param(label_color, 'label_color')
 
     # CMAP ---------------------------------------------------------------------
     custom_cmap = check_str_param(cmap, 'cmap', default_cmap)
@@ -616,7 +617,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                             alpha=arrow_alpha)
                                 
             if label[i] is not None and plot_mosaic:
-                ax.annotate(label[i], xy=(label_pad_x, label_pad_y), color=label_color,
+                ax.annotate(label[i], xy=(label_pad_x, label_pad_y), color=label_color[i],
                             xycoords='axes pixels', weight='bold',
                             size=label_size)
 
