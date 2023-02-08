@@ -45,10 +45,11 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 tick_color='black', ndec=1, pxscale=0.01, auscale=1., 
                 ang_legend=False, au_legend=False, axis=True,
                 show_center=False, cmap=None, log=False, colorbar=True,
-                colorbar_ticks=None, colorbar_ticksize=8, colorbar_label='',
-                colorbar_label_size=8, patch=None, dpi=100, size_factor=6, horsp=0.4,
-                versp=0.2, width=400, height=400, title=None, tit_size=16,
-                sampling=1, save=None, transparent=False):
+                top_colorbar=False, colorbar_ticks=None, colorbar_ticksize=8,
+                colorbar_label='', colorbar_label_size=8, patch=None, dpi=100,
+                size_factor=6, horsp=0.4, versp=0.2, width=400, height=400,
+                title=None, tit_size=16, sampling=1, save=None,
+                return_fig_ax=False, transparent=False):
     """ Plot a 2d array or a tuple of 2d arrays. Supports the ``matplotlib`` and
     ``bokeh`` backends. When having a tuple of 2d arrays, the plot turns into a
     mosaic. For ``matplotlib``, instead of a mosaic of images, we can create a
@@ -113,7 +114,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         5 by default. If a tuple, sets the padding in x and y.
     label_size : int, optional
         [backend='matplotlib'] Size of the labels font.
-    label_color : str, optional
+    label_color : string or tuple of strings, optional
         [backend='matplotlib'] Color of labels font.
     grid : bool or tuple of bools, optional
         [backend='matplotlib'] If True, a grid is displayed over the image, off
@@ -169,6 +170,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] Log color scale.
     colorbar : bool or tuple of bool, optional
         To attach a colorbar, on by default.
+    top_colorbar : bool, optional
+        [backend='matplotlib'] If True the colorbar is place above the image
+        rather than on the right. False by default.
     colorbar_ticks : None, tuple or tuple of tuples, optional
         [backend='matplotlib'] Custom ticks for the colorbar of each plot.
     colorbar_ticksize : int, optional
@@ -392,6 +396,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
     # LABEL --------------------------------------------------------------------
     label = check_str_param(label, 'label')
+    label_color = check_str_param(label_color, 'label_color')
 
     # CMAP ---------------------------------------------------------------------
     custom_cmap = check_str_param(cmap, 'cmap', default_cmap)
@@ -613,7 +618,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                             alpha=arrow_alpha)
 
             if label[i] is not None and plot_mosaic:
-                ax.annotate(label[i], xy=(label_pad_x, label_pad_y), color=label_color,
+                ax.annotate(label[i], xy=(label_pad_x, label_pad_y), color=label_color[i],
                             xycoords='axes pixels', weight='bold',
                             size=label_size)
 
@@ -679,9 +684,14 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 divider = make_axes_locatable(ax)
                 # the width of cax is 5% of ax and the padding between cax
                 # and ax wis fixed at 0.05 inch
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False,
-                                  ticks=cbticks)
+                if top_colorbar:
+                    cax = divider.append_axes("top", size="5%", pad=0.05)
+                    cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False, ticks=cbticks, orientation='horizontal')
+                    cb.ax.xaxis.set_ticks_position('top')
+                    cb.ax.xaxis.set_label_position('top')
+                else:
+                    cax = divider.append_axes("right", size="5%", pad=0.05)
+                    cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False, ticks=cbticks)
                 cb.outline.set_linewidth(0.1)
                 cb.ax.tick_params(labelsize=colorbar_ticksize)
                 if colorbar_label != '':
