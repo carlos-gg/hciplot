@@ -35,20 +35,20 @@ default_cmap = 'viridis'
 
 def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 vmin=None, circle=None, circle_alpha=0.8, circle_color='white',
-                circle_linestyle='-', circle_radius=6, circle_label=False, 
-                circle_label_color='white', arrow=None, arrow_alpha=0.8, 
-                arrow_length=10, arrow_shiftx=5, arrow_label=None, label=None, 
+                circle_linestyle='-', circle_radius=6, circle_label=False,
+                circle_label_color='white', arrow=None, arrow_alpha=0.8,
+                arrow_length=10, arrow_shiftx=5, arrow_label=None, label=None,
                 label_pad=5, label_size=12, label_color='white', grid=False,
-                grid_alpha=0.4, grid_color='#f7f7f7', grid_spacing=None,
-                cross=None, cross_alpha=0.4, cross_color='white',
-                ang_scale=False, ang_ticksep=50, tick_direction='out',
-                tick_color='black', ndec=1, pxscale=0.01, auscale=1.,
+                grid_alpha=0.4,  grid_color='#f7f7f7', grid_spacing=None,
+                cross=None, cross_alpha=0.4, lab_fontsize=8, cross_color='white',
+                ang_scale=False, ang_ticksep=50, tick_direction='out', 
+                tick_color='black', ndec=1, pxscale=0.01, auscale=1., 
                 ang_legend=False, au_legend=False, axis=True,
                 show_center=False, cmap=None, log=False, colorbar=True,
                 colorbar_ticks=None, colorbar_ticksize=8, colorbar_label='',
                 colorbar_label_size=8, patch=None, dpi=100, size_factor=6, horsp=0.4,
                 versp=0.2, width=400, height=400, title=None, tit_size=16,
-                sampling=1, save=None, return_fig_ax=False, transparent=False):
+                sampling=1, save=None, transparent=False):
     """ Plot a 2d array or a tuple of 2d arrays. Supports the ``matplotlib`` and
     ``bokeh`` backends. When having a tuple of 2d arrays, the plot turns into a
     mosaic. For ``matplotlib``, instead of a mosaic of images, we can create a
@@ -135,8 +135,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] If True, the axes are displayed in angular scale
         (arcsecs).
     ang_ticksep : int, optional
-        [backend='matplotlib'] Separation for the ticks when using axis in
-        angular scale.
+        [backend='matplotlib'] Separation for the ticks in pixels, when using 
+        axis in angular scale.
     tick_direction : str, optional
         [backend='matplotlib'] Outward or inward facing axis ticks.
         'in' for inward, 'out' for outwards.
@@ -284,7 +284,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     elif isinstance(data, tuple):
         for i in range(len(data)):
             # checking the elements are 2d (excepting the case of 3 channels)
-            if not data[i].ndim == 2:# and data[i].shape[2] != 3:
+            if not data[i].ndim == 2:  # and data[i].shape[2] != 3:
                 raise ValueError(msg_data_type)
     else:
         raise ValueError(msg_data_type)
@@ -430,8 +430,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         fig = figure(figsize=(cols * size_factor, rows * size_factor), dpi=dpi)
 
         if title is not None:
-            fig.suptitle(title, fontsize=tit_size, va='center', x=0.51, 
-                         #y=1-0.08*(28/tit_size)**(0.5))
+            fig.suptitle(title, fontsize=tit_size, va='center', x=0.51,
+                         # y=1-0.08*(28/tit_size)**(0.5))
                          y=1-0.1*(16/tit_size))
 
         if mode == 'surface':
@@ -523,7 +523,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 xmi = xma - scaleng
                 hlines(y=scapad, xmin=xmi, xmax=xma, colors='white', lw=1.,
                        linestyles='solid')
-                annotate(scalab, (xmi + scalabloc, scapad + 2), color='white', 
+                annotate(scalab, (xmi + scalabloc, scapad + 2), color='white',
                          size=label_size)
             if au_legend[i] and plot_mosaic:
                 pxsc_fac = (0.012265/pxscale)
@@ -542,13 +542,13 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 scapad = 5*pxsc_fac*labsz_fac
                 xma = frame_size - scapad
                 xmi = xma - scaleng
-                hlines(y=xma-scapad, xmin=xmi, xmax=xma, colors='white', 
+                hlines(y=xma-scapad, xmin=xmi, xmax=xma, colors='white',
                        lw=1., linestyles='solid')
                 annotate(scalab, (xmi + scalabloc, xma-0.5*scapad),
                          color='white', size=label_size)
-                
+
             if show_circle and plot_mosaic:
-                if isinstance(circle_linestyle,tuple):
+                if isinstance(circle_linestyle, tuple):
                     c_offset = circle_linestyle[0]
                     circle_linestyle = circle_linestyle[1]
                 else:
@@ -566,12 +566,12 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                                   fill=False, color=circle_color_tmp,
                                   alpha=circle_alpha[j], ls=circle_linestyle_tmp)
                     ax.add_artist(circ)
-                    if circle_label:                  
+                    if circle_label:
                         x = coor_circle[j][0]
                         y = coor_circle[j][1]
-                        if isinstance(circle_label,str):
+                        if isinstance(circle_label, str):
                             cirlabel = circle_label
-                        elif isinstance(circle_label,tuple):
+                        elif isinstance(circle_label, tuple):
                             cirlabel = circle_label[j]
                         else:
                             cirlabel = str(int(x))+','+str(int(y))
@@ -595,22 +595,23 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                          -arrow_length, 0, color='white', head_width=6,
                          head_length=4, width=2, length_includes_head=True,
                          alpha=arrow_alpha)
-                if arrow_label:                  
+                if arrow_label:
                     x = arrow[0]
                     y = arrow[1]
-                    if isinstance(arrow_label,str):
+                    if isinstance(arrow_label, str):
                         arrlabel = arrow_label
                     else:
                         arrlabel = str(int(x))+','+str(int(y))
                     if len(arrlabel) < 5:
-                        arr_fontsize=14
+                        arr_fontsize = 14
                     else:
-                        arr_fontsize=label_size
+                        arr_fontsize = lab_fontsize
+
                     ax.text(x + arrow_length + 1.3*arrow_shiftx, y, arrlabel,
                             fontsize=arr_fontsize, color='white', family='monospace',
                             ha='left', va='center', weight='bold',
                             alpha=arrow_alpha)
-                                
+
             if label[i] is not None and plot_mosaic:
                 ax.annotate(label[i], xy=(label_pad_x, label_pad_y), color=label_color,
                             xycoords='axes pixels', weight='bold',
@@ -656,8 +657,10 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 labels_y = []
                 labels_x = []
                 for t in range(half_num_ticks, -half_num_ticks-1, -1):
-                    labels_y.append(round(Decimal(-t * (ang_ticksep * pxscale)),ndec))
-                    labels_x.append(round(Decimal(t * (ang_ticksep * pxscale)),ndec))
+                    labels_y.append(
+                        round(Decimal(-t * (ang_ticksep * pxscale)), ndec))
+                    labels_x.append(
+                        round(Decimal(t * (ang_ticksep * pxscale)), ndec))
                 ax.set_xticklabels(labels_x)
                 ax.set_yticklabels(labels_y)
                 ax.set_xlabel('\u0394RA ["]', fontsize=label_size)
@@ -671,8 +674,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
             if not axis[i]:
                 ax.set_axis_off()
-                
-            if colorbar[i]:
+
+            if colorbar[i] and plot_mosaic:
                 divider = make_axes_locatable(ax)
                 # the width of cax is 5% of ax and the padding between cax
                 # and ax wis fixed at 0.05 inch
@@ -960,5 +963,3 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
 
     else:
         raise ValueError("`mode` is not recognized")
-
-
