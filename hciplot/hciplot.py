@@ -9,8 +9,9 @@ import numpy as np
 import holoviews as hv
 from holoviews import opts
 from subprocess import call
-from matplotlib.pyplot import (figure, subplot, show, Circle, savefig, close,
-                               hlines, annotate)
+from matplotlib.pyplot import (figure, subplot, show, savefig, close, hlines,
+                               annotate)
+from matplotlib.patches import Circle, Ellipse
 from matplotlib.pyplot import colorbar as plt_colorbar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.cm import register_cmap
@@ -36,13 +37,16 @@ default_cmap = 'viridis'
 def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 vmin=None, circle=None, circle_alpha=0.8, circle_color='white',
                 circle_linestyle='-', circle_radius=6, circle_label=False,
-                circle_label_color='white', arrow=None, arrow_alpha=0.8,
+                circle_label_color='white', ellipse=None, ellipse_alpha=0.8,
+                ellipse_color='white', ellipse_linestyle='-', ellipse_a=6,
+                ellipse_b=4, ellipse_angle=0, ellipse_label=False,
+                ellipse_label_color='white', arrow=None, arrow_alpha=0.8,
                 arrow_length=10, arrow_shiftx=5, arrow_label=None, label=None,
                 label_pad=5, label_size=12, label_color='white', grid=False,
                 grid_alpha=0.4,  grid_color='#f7f7f7', grid_spacing=None,
                 cross=None, cross_alpha=0.4, lab_fontsize=8, cross_color='white',
-                ang_scale=False, ang_ticksep=50, tick_direction='out', 
-                tick_color='black', ndec=1, pxscale=0.01, auscale=1., 
+                ang_scale=False, ang_ticksep=50, tick_direction='out',
+                tick_color='black', ndec=1, pxscale=0.01, auscale=1.,
                 ang_legend=False, au_legend=False, axis=True,
                 show_center=False, cmap=None, log=False, colorbar=True,
                 top_colorbar=False, colorbar_ticks=None, colorbar_ticksize=8,
@@ -92,6 +96,27 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         circle. If a string: the string to be printed. If a tuple, should be 
         a tuple of strings with same length as 'circle'.
     circle_label_color : str, optional
+        [backend='matplotlib'] Default 'white'. Sets the color of the circle
+        label
+    ellipse : None, tuple or tuple of tuples, optional
+        [backend='matplotlib'] To show a circle at the given px coordinates. The
+        circles are shown on all subplots.
+    ellipse_alpha : float or tuple of floats, optional
+        [backend='matplotlib'] Alpha transparency for each circle.
+    ellipse_color : str, optional
+        [backend='matplotlib'] Color of the circles. White by default.
+    ellipse_a : int, optional
+        [backend='matplotlib'] Major axis of the ellipses, 6 px by default.
+    ellipse_b : int, optional
+        [backend='matplotlib'] Minor axis of the ellipses, 4 px by default.
+    ellipse_angle : float, optional
+        [backend='matplotlib'] Position angle of the major axis in deg, 0 by 
+        default.
+    ellipse_label : bool or string, optional
+        [backend='matplotlib'] Whether to show the coordinates next to each
+        circle. If a string: the string to be printed. If a tuple, should be 
+        a tuple of strings with same length as 'circle'.
+    ellipse_label_color : str, optional
         [backend='matplotlib'] Default 'white'. Sets the color of the circle
         label
     arrow : None or tuple of floats, optional
@@ -322,12 +347,18 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     if circle is not None:
         if isinstance(circle, tuple):
             show_circle = True
-            if isinstance(circle[0], tuple):
+            if isinstance(circle[0], (tuple, list)):
                 n_circ = len(circle)
                 coor_circle = circle
-            elif isinstance(circle[0], (float, int)):
+                if len(circle[0]) != 2:
+                    raise TypeError("Circle coordinates should have length 2")
+            elif np.isscalar(circle[0]):
                 n_circ = 1
                 coor_circle = [circle] * n_circ
+            else:
+                msg = "Type of first element of input 'circle' not recognised."
+                msg += " Should be either scalar or tuple/list."
+                raise TypeError(msg)
         else:
             print("`circle` must be a tuple (X,Y) or tuple of tuples (X,Y)")
             show_circle = False
@@ -353,6 +384,53 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
             # a different value for each circle
             if not n_circ == len(circle_alpha):
                 msg = '`circle_alpha` must have the same len as `circle`'
+                raise ValueError(msg)
+
+    # ELLIPSE ------------------------------------------------------------------
+    if ellipse is not None:
+        if isinstance(ellipse, tuple):
+            show_ellipse = True
+            if isinstance(ellipse[0], (tuple, list)):
+                n_ell = len(ellipse)
+                coor_ellipse = ellipse
+                if len(ellipse[0]) != 2:
+                    raise TypeError("Circle coordinates should have length 2")
+            elif np.isscalar(ellipse[0]):
+                n_ell = 1
+                coor_ellipse = [ellipse] * n_ell
+            else:
+                msg = "Type of first element of input 'circle' not recognised."
+                msg += " Should be either scalar or tuple/list."
+                raise TypeError(msg)
+        else:
+            print("`circle` must be a tuple (X,Y) or tuple of tuples (X,Y)")
+            show_ellipse = False
+    else:
+        show_ellipse = False
+
+    if show_ellipse:
+        if np.isscalar(ellipse_a) and np.isscalar(ellipse_b) and np.isscalar(ellipse_angle):
+            # single value is provided, used for all circles
+            ellipse_a = [ellipse_a] * n_ell
+            ellipse_b = [ellipse_b] * n_ell
+            ellipse_angle = [ellipse_angle] * n_ell
+        elif isinstance(ellipse_a, tuple) and isinstance(ellipse_b, tuple) and isinstance(ellipse_angle, tuple):
+            # a different value for each circle
+            if not n_ell == len(ellipse_a) or not n_ell == len(ellipse_b) or not n_ell == len(ellipse_angle):
+                msg = '`ellipse_a` and `ellipse_b` and `ellipse_angle` must have the same len as `ellipse`'
+                raise ValueError(msg)
+        else:
+            msg = "`ellipse_a`, `ellipse_b` and `ellipse_angle` must either all be scalars or "
+            msg += "all tuples of the same length as the number of ellipses to plot"
+            raise TypeError(msg)
+
+    if show_ellipse:
+        if isinstance(ellipse_alpha, (float, int)):
+            ellipse_alpha = [ellipse_alpha] * n_ell
+        elif isinstance(ellipse_alpha, tuple):
+            # a different value for each circle
+            if not n_ell == len(ellipse_alpha):
+                msg = '`ellipse_alpha` must have the same len as `ellipse`'
                 raise ValueError(msg)
 
     # ARROW --------------------------------------------------------------------
@@ -581,9 +659,44 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                         else:
                             cirlabel = str(int(x))+','+str(int(y))
                         ax.text(x, y + circle_radius[j] + c_offset, cirlabel,
-                                fontsize=label_size, color=circle_label_color, family='monospace',
-                                ha='center', va='center', weight='bold',
-                                alpha=circle_alpha[j])
+                                fontsize=label_size, color=circle_label_color,
+                                family='monospace', ha='center', va='center',
+                                weight='bold', alpha=circle_alpha[j])
+
+            if show_ellipse and plot_mosaic:
+                if isinstance(ellipse_linestyle, tuple):
+                    e_offset = ellipse_linestyle[0]
+                    ellipse_linestyle = ellipse_linestyle[1]
+                else:
+                    e_offset = label_size+1  # vertical offset is equal to the font size + 1, was 2
+                for j in range(n_ell):
+                    if isinstance(ellipse_color, (list, tuple)):
+                        ellipse_color_tmp = ellipse_color[j]
+                    else:
+                        ellipse_color_tmp = ellipse_color
+                    if isinstance(ellipse_linestyle, (list, tuple)):
+                        ellipse_linestyle_tmp = ellipse_linestyle[j]
+                    else:
+                        ellipse_linestyle_tmp = ellipse_linestyle
+                    ell = Ellipse(coor_ellipse[j], width=ellipse_a[j],
+                                  height=ellipse_b[j], angle=ellipse_angle[j],
+                                  fill=False, color=ellipse_color_tmp,
+                                  alpha=ellipse_alpha[j],
+                                  ls=ellipse_linestyle_tmp)
+                    ax.add_artist(ell)
+                    if ellipse_label:
+                        x = coor_ellipse[j][0]
+                        y = coor_ellipse[j][1]
+                        if isinstance(ellipse_label, str):
+                            elllabel = ellipse_label
+                        elif isinstance(ellipse_label, tuple):
+                            elllabel = ellipse_label[j]
+                        else:
+                            elllabel = str(int(x))+','+str(int(y))
+                        ax.text(x, y + ellipse_a[j] + e_offset, elllabel,
+                                fontsize=label_size, color=ellipse_label_color,
+                                family='monospace', ha='center', va='center',
+                                weight='bold', alpha=ellipse_alpha[j])
 
             if show_cross and plot_mosaic:
                 ax.axhline(coor_cross[0], xmin=0, xmax=frame_size, alpha=cross_alpha, lw=0.6,
@@ -671,7 +784,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 ax.set_xlabel('\u0394RA ["]', fontsize=label_size)
                 ax.set_ylabel('\u0394Dec ["]', fontsize=label_size)
                 ax.minorticks_on()
-                ax.tick_params(axis='both', which='both', labelsize=label_size, direction=tick_direction, color=tick_color)
+                ax.tick_params(axis='both', which='both', labelsize=label_size,
+                               direction=tick_direction, color=tick_color)
 
             else:
                 ax.set_xlabel("x", fontsize=label_size)
@@ -686,19 +800,23 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 # and ax wis fixed at 0.05 inch
                 if top_colorbar:
                     cax = divider.append_axes("top", size="5%", pad=0.05)
-                    cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False, ticks=cbticks, orientation='horizontal')
+                    cb = plt_colorbar(
+                        im, ax=ax, cax=cax, drawedges=False, ticks=cbticks, orientation='horizontal')
                     cb.ax.xaxis.set_ticks_position('top')
                     cb.ax.xaxis.set_label_position('top')
                 else:
                     cax = divider.append_axes("right", size="5%", pad=0.05)
-                    cb = plt_colorbar(im, ax=ax, cax=cax, drawedges=False, ticks=cbticks)
+                    cb = plt_colorbar(im, ax=ax, cax=cax,
+                                      drawedges=False, ticks=cbticks)
                 cb.outline.set_linewidth(0.1)
                 cb.ax.tick_params(labelsize=colorbar_ticksize)
                 if colorbar_label != '':
-                    cb.set_label(label=colorbar_label, fontsize=colorbar_label_size)
+                    cb.set_label(label=colorbar_label,
+                                 fontsize=colorbar_label_size)
 
             if patch is not None:
-                beam = Circle(xy=(frame_size/10, frame_size/6), radius=patch/2, color='grey', fill=True, alpha=1)
+                beam = Circle(xy=(frame_size/10, frame_size/6),
+                              radius=patch/2, color='grey', fill=True, alpha=1)
                 ax.add_artist(beam)
 
         fig.subplots_adjust(wspace=horsp, hspace=versp)
@@ -709,7 +827,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         elif return_fig_ax is False and save is None:
             show()
         elif return_fig_ax and save is None:
-            return fig,ax
+            return fig, ax
 
     elif backend == 'bokeh':
         hv.extension(backend)
