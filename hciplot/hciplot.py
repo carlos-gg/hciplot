@@ -15,8 +15,7 @@ from matplotlib.patches import Circle, Ellipse
 from matplotlib.pyplot import colorbar as plt_colorbar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.cm import register_cmap
-import matplotlib.colors as colors
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap, Normalize
 import warnings
 warnings.filterwarnings("ignore", module="matplotlib")
 
@@ -30,7 +29,7 @@ ds9heat = {'red': lambda v: np.interp(v, [0, 0.34, 1], [0, 1, 1]),
            'blue': lambda v: np.interp(v, [0, 0.65, 0.98, 1], [0, 0, 1, 1])}
 register_cmap(cmap=LinearSegmentedColormap('ds9cool', ds9cool))
 register_cmap(cmap=LinearSegmentedColormap('ds9heat', ds9heat))
-cmap_binary = colors.ListedColormap(['black', 'white'])
+cmap_binary = ListedColormap(['black', 'white'])
 default_cmap = 'viridis'
 
 
@@ -536,14 +535,14 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 ax.set_aspect('auto')
 
                 if logscale[i]:
-                    image += np.abs(np.nanmin(image))
-                    if vmin[i] is None:
-                        linthresh = 1e-2
-                    else:
-                        linthresh = vmin[i]
-                    norm = colors.SymLogNorm(linthresh, base=10)
+                    #image += np.abs(np.nanmin(image))  # old code to avoid negatives in image
+                    if vmax[i] is None:
+                        vmax[i] = np.nanmax(image)
+                    if vmin[i] is None or vmin[i] <= 0:
+                        vmin[i] = vmax[i] * 1e-2
+                    norm = LogNorm(vmin=vmin[i], vmax=vmax[i], clip=True)
                 else:
-                    norm = None
+                    norm = Normalize(vmin=vmin[i], vmax=vmax[i], clip=True)
 
                 if image.dtype == bool:
                     image = image.astype(int)
@@ -557,9 +556,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     cucmap = custom_cmap[i]
                     cbticks = cbar_ticks[i]
 
-                im = ax.imshow(image, cmap=cucmap, origin='lower', norm=norm,
-                               interpolation='nearest', vmin=vmin[i],
-                               vmax=vmax[i])
+                im = ax.imshow(image, cmap=cucmap, origin='lower', norm=norm, interpolation='nearest')
                 # if colorbar[i]:
                 #     divider = make_axes_locatable(ax)
                 #     # the width of cax is 5% of ax and the padding between cax
@@ -574,7 +571,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 #     cbw = 0
 
             else:
-                # Leave the import to make porjection='3d' work
+                # Leave the import to make projection='3d' work
                 #from mpl_toolkits.mplot3d import Axes3D
                 x = np.outer(np.arange(0, frame_size, 1), np.ones(frame_size))
                 y = x.copy().T
