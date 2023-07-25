@@ -9,8 +9,8 @@ from shutil import rmtree
 from subprocess import call
 from warnings import filterwarnings
 
-import holoviews as hv
 import numpy as np
+from holoviews import extension, Dataset, Image, Layout, output, opts
 from matplotlib.cm import register_cmap
 from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap, Normalize
 from matplotlib.patches import Circle, Ellipse
@@ -829,7 +829,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
             return fig, ax
 
     elif backend == 'bokeh':
-        hv.extension(backend)
+        extension(backend)
         subplots = []
         # options = "Image (cmap='" + custom_cmap[0] + "')"  # taking first item
         # hv.opts(options)
@@ -840,14 +840,14 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 vmin[i] = image.min()
             if vmax[i] is None:
                 vmax[i] = image.max()
-            im = hv.Image((range(image.shape[1]), range(image.shape[0]), image))
+            im = Image((range(image.shape[1]), range(image.shape[0]), image))
             subplots.append(im.opts(tools=['hover'], colorbar=colorbar[i],
                                     colorbar_opts={'width': 15},
                                     width=width, height=height,
                                     clim=(vmin[i], vmax[i]),
                                     cmap=custom_cmap[0]))
 
-        return hv.Layout(subplots).cols(cols)
+        return Layout(subplots).cols(cols)
 
     else:
         raise ValueError('`backend` not supported')
@@ -936,7 +936,7 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
     https://holoviews.org/user_guide/Gridded_Datasets.html
     https://holoviews.org/user_guide/Applying_Customizations.html
     """
-    hv.extension(backend)
+    extension(backend)
 
     if not isinstance(cube, np.ndarray):
         raise TypeError('`cube` must be a numpy.ndarray')
@@ -955,15 +955,15 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
             # Y is a 1D array of shape N and
             # Z is a 1D array of shape O
             # Data is a ND array of shape NxMxO
-            ds = hv.Dataset((range(cube.shape[2]), range(cube.shape[1]),
-                             range(cube.shape[0]), cube), ['x', 'y', 'time'],
-                            'flux')
+            ds = Dataset((range(cube.shape[2]), range(cube.shape[1]),
+                         range(cube.shape[0]), cube), ['x', 'y', 'time'],
+                         'flux')
             max_frames = cube.shape[0]
         elif cube.ndim == 4:
             # adding a lambda dimension
-            ds = hv.Dataset((range(cube.shape[3]), range(cube.shape[2]),
-                             range(cube.shape[1]), range(cube.shape[0]), cube),
-                            ['x', 'y', 'time', 'lambda'], 'flux')
+            ds = Dataset((range(cube.shape[3]), range(cube.shape[2]),
+                        range(cube.shape[1]), range(cube.shape[0]), cube),
+                        ['x', 'y', 'time', 'lambda'], 'flux')
             max_frames = cube.shape[0] * cube.shape[1]
 
         # Matplotlib takes None but not Bokeh. We take global min & max instead
@@ -976,9 +976,9 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
         print(":Cube_shape\t{}".format(list(cube.shape[::-1])))
 
         # not working for bokeh: dpi
-        image_stack = ds.to(hv.Image, kdims=['x', 'y'], dynamic=dynamic)
-        hv.output(backend=backend, size=size, dpi=dpi, fig=figtype,
-                  max_frames=max_frames)
+        image_stack = ds.to(Image, kdims=['x', 'y'], dynamic=dynamic)
+        output(backend=backend, size=size, dpi=dpi, fig=figtype,
+               max_frames=max_frames)
 
         if backend == 'matplotlib':
             # keywords in the currently active 'matplotlib' renderer are:
@@ -987,7 +987,7 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
             #options = "Image (cmap='" + cmap + "', interpolation='nearest',"
             #options += " clims=("+str(vmin)+','+str(vmax)+")"+")"
             #opts(options, image_stack)
-            return image_stack.opts(hv.opts.Image(colorbar=colorbar,
+            return image_stack.opts(opts.Image(colorbar=colorbar,
                                                cmap=cmap,
                                                clim=(vmin, vmax)))
             # hv.save(image_stack, 'holomap.gif', fps=5)
@@ -1010,7 +1010,7 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
             else:
                 width_ = width
 
-            return image_stack.opts(hv.opts.Image(colorbar=colorbar,
+            return image_stack.opts(opts.Image(colorbar=colorbar,
                                                colorbar_opts={'width': 15,
                                                               'padding': 3},
                                                width=width_, height=height,
