@@ -1,23 +1,25 @@
-__author__ = 'Carlos Alberto Gomez Gonzalez, Valentin Christiaens'
+__author__ = 'Carlos Alberto Gomez Gonzalez, Valentin Christiaens, Iain Hammond'
 __all__ = ['plot_frames',
            'plot_cubes']
 
-from decimal import *
-import os
-import shutil
-import numpy as np
-import holoviews as hv
-from holoviews import opts
+from decimal import Decimal
+from os import mkdir
+from os.path import exists
+from shutil import rmtree
 from subprocess import call
-from matplotlib.pyplot import (figure, subplot, show, savefig, close, hlines,
-                               annotate)
-from matplotlib.patches import Circle, Ellipse
-from matplotlib.pyplot import colorbar as plt_colorbar
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from warnings import filterwarnings
+
+import holoviews as hv
+import numpy as np
 from matplotlib.cm import register_cmap
 from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap, Normalize
-import warnings
-warnings.filterwarnings("ignore", module="matplotlib")
+from matplotlib.patches import Circle, Ellipse
+from matplotlib.pyplot import colorbar as plt_colorbar
+from matplotlib.pyplot import (figure, subplot, show, savefig, close, hlines,
+                               annotate)
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+filterwarnings("ignore", module="matplotlib")
 
 # Registering heat and cool colormaps from SaoImage DS9
 # borrowed from: https://gist.github.com/adonath/c9a97d2f2d964ae7b9eb
@@ -524,7 +526,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
             raise ValueError("`mode` value was not recognized")
 
         for i, v in enumerate(range(num_plots)):
-            image = data[i].copy()
+            image = np.copy(data[i])
             frame_size = image.shape[0]  # assuming square frames
             cy = image.shape[0] / 2 - 0.5
             cx = image.shape[1] / 2 - 0.5
@@ -833,7 +835,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         # hv.opts(options)
 
         for i, v in enumerate(range(num_plots)):
-            image = data[i].copy()
+            image = np.copy(data[i])
             if vmin[i] is None:
                 vmin[i] = image.min()
             if vmax[i] is None:
@@ -930,9 +932,9 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
 
     Notes
     -----
-    http://holoviews.org/getting_started/Gridded_Datasets.html
-    http://holoviews.org/user_guide/Gridded_Datasets.html
-    http://holoviews.org/user_guide/Applying_Customizations.html
+    https://holoviews.org/getting_started/Gridded_Datasets.html
+    https://holoviews.org/user_guide/Gridded_Datasets.html
+    https://holoviews.org/user_guide/Applying_Customizations.html
     """
     hv.extension(backend)
 
@@ -985,7 +987,7 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
             #options = "Image (cmap='" + cmap + "', interpolation='nearest',"
             #options += " clims=("+str(vmin)+','+str(vmax)+")"+")"
             #opts(options, image_stack)
-            return image_stack.opts(opts.Image(colorbar=colorbar,
+            return image_stack.opts(hv.opts.Image(colorbar=colorbar,
                                                cmap=cmap,
                                                clim=(vmin, vmax)))
             # hv.save(image_stack, 'holomap.gif', fps=5)
@@ -1008,7 +1010,7 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
             else:
                 width_ = width
 
-            return image_stack.opts(opts.Image(colorbar=colorbar,
+            return image_stack.opts(hv.opts.Image(colorbar=colorbar,
                                                colorbar_opts={'width': 15,
                                                               'padding': 3},
                                                width=width_, height=height,
@@ -1059,10 +1061,10 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
                                          label_step_range[1],
                                          label_step_range[2])
 
-        if os.path.exists(dir_path):
-            shutil.rmtree(dir_path)
+        if exists(dir_path):
+            rmtree(dir_path)
             print('Replacing ' + dir_path)
-        os.mkdir(dir_path)
+        mkdir(dir_path)
 
         print('Producing each animation frame...')
         for i, labstep in zip(data_step_range, list(label_step_range)):
@@ -1072,15 +1074,15 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
             plot_frames(cube[i], backend='matplotlib', mode='mosaic',
                         save=savelabel, dpi=dpi, vmin=vmin, vmax=vmax,
                         colorbar=colorbar, cmap=cmap,
-                        label=[label + str(labstep + 1)], **kwargs)
+                        label=tuple([label + str(labstep + 1)]), **kwargs)
         try:
             filename = anim_path + '.' + anim_format
             call(['convert', '-delay', str(delay), dir_path + '*.png',
                   filename])
-            if os.path.exists(filename):
+            if exists(filename):
                 print('Animation successfully saved to disk as ' + filename)
                 if delete_anim_cache:
-                    shutil.rmtree(dir_path)
+                    rmtree(dir_path)
                     print('Temp directory deleted ' + dir_path)
 
         except FileNotFoundError:
