@@ -93,7 +93,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] Radius of the circles, 6 px by default.
     circle_label : bool or string, optional
         [backend='matplotlib'] Whether to show the coordinates next to each
-        circle. If a string: the string to be printed. If a tuple, should be 
+        circle. If a string: the string to be printed. If a tuple, should be
         a tuple of strings with same length as 'circle'.
     circle_label_color : str, optional
         [backend='matplotlib'] Default 'white'. Sets the color of the circle
@@ -110,11 +110,11 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     ellipse_b : int, optional
         [backend='matplotlib'] Minor axis of the ellipses, 4 px by default.
     ellipse_angle : float, optional
-        [backend='matplotlib'] Position angle of the major axis in deg, 0 by 
+        [backend='matplotlib'] Position angle of the major axis in deg, 0 by
         default.
     ellipse_label : bool or string, optional
         [backend='matplotlib'] Whether to show the coordinates next to each
-        circle. If a string: the string to be printed. If a tuple, should be 
+        circle. If a string: the string to be printed. If a tuple, should be
         a tuple of strings with same length as 'circle'.
     ellipse_label_color : str, optional
         [backend='matplotlib'] Default 'white'. Sets the color of the circle
@@ -161,7 +161,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] If True, the axes are displayed in angular scale
         (arcsecs).
     ang_ticksep : int, optional
-        [backend='matplotlib'] Separation for the ticks in pixels, when using 
+        [backend='matplotlib'] Separation for the ticks in pixels, when using
         axis in angular scale.
     tick_direction : str, optional
         [backend='matplotlib'] Outward or inward facing axis ticks.
@@ -179,7 +179,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='matplotlib'] If True a scaling bar (1 arcsec or 500 mas) will
         be added in the bottom-right corner of the subplots.
     au_legend : bool or tuple of bools, optional
-        [backend='matplotlib'] If True (and ang_legend is False) a scaling bar 
+        [backend='matplotlib'] If True (and ang_legend is False) a scaling bar
         (10 au, 20 au or 50 au) will be added in the top-right corner of the
         subplots.
     axis : bool, optional
@@ -267,12 +267,12 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                    'None/float/ints'
         if param is None:
             param = [None] * num_plots
-        elif isinstance(param, (int, float)):
+        elif np.isscalar(param):
             param = [param] * num_plots
-        elif isinstance(param, tuple):
+        elif len(param) == num_plots:
             if not num_plots == len(param):
-                msg = 'The len of `' + name + '` ({}) does not match the ' + \
-                      'number of plots ({})'
+                msg = 'The len of `' + name + \
+                    '` ({}) does not match the ' + 'number of plots ({})'
                 raise ValueError(msg.format(len(param), num_plots))
             else:
                 for elem in param:
@@ -283,16 +283,15 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         return param
 
     def check_str_param(param, name, default_value=None):
-        msg_type = '`' + name + '` must be a None, str or tuple of ' + \
-                   'None/str'
+        msg_type = '`' + name + '` must be a None, str or tuple of ' + 'None/str'
         if param is None:
             param = [default_value] * num_plots
         elif isinstance(param, str):
             param = [param] * num_plots
         elif isinstance(param, tuple):
             if not num_plots == len(param):
-                msg = 'The len of `' + name + '` ({}) does not match the ' + \
-                      'number of plots ({})'
+                msg = 'The len of `' + name + \
+                    '` ({}) does not match the ' + 'number of plots ({})'
                 raise ValueError(msg.format(len(param), num_plots))
             else:
                 for elem in param:
@@ -309,8 +308,10 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         if data.ndim == 2:
             data = [data]
         elif data.ndim == 3:
+            data = [data[i] for i in range(data.shape[0])]
+        else:
             raise TypeError(msg_data_type)
-    elif isinstance(data, tuple):
+    elif isinstance(data, (list, tuple)):
         for i in range(len(data)):
             # checking the elements are 2d (excepting the case of 3 channels)
             if not data[i].ndim == 2:  # and data[i].shape[2] != 3:
@@ -575,7 +576,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
             else:
                 # Leave the import to make porjection='3d' work
-                #from mpl_toolkits.mplot3d import Axes3D
+                # from mpl_toolkits.mplot3d import Axes3D
                 x = np.outer(np.arange(0, frame_size, 1), np.ones(frame_size))
                 y = x.copy().T
                 ax = subplot(rows, cols, v, projection='3d')
@@ -635,7 +636,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     c_offset = circle_linestyle[0]
                     circle_linestyle = circle_linestyle[1]
                 else:
-                    c_offset = label_size+1  # vertical offset is equal to the font size + 1, was 2
+                    c_offset = 4  # vertical offset equal to 4px
                 for j in range(n_circ):
                     if isinstance(circle_color, (list, tuple)):
                         circle_color_tmp = circle_color[j]
@@ -658,7 +659,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                             cirlabel = circle_label[j]
                         else:
                             cirlabel = str(int(x))+','+str(int(y))
-                        ax.text(x, y + circle_radius[j] + c_offset, cirlabel,
+                        # added below - can otherwise lead to wide separations
+                        c_offset_j = min(c_offset, circle_radius[j])
+                        ax.text(x, y + circle_radius[j] + c_offset_j, cirlabel,
                                 fontsize=label_size, color=circle_label_color,
                                 family='monospace', ha='center', va='center',
                                 weight='bold', alpha=circle_alpha[j])
@@ -668,7 +671,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     e_offset = ellipse_linestyle[0]
                     ellipse_linestyle = ellipse_linestyle[1]
                 else:
-                    e_offset = label_size+1  # vertical offset is equal to the font size + 1, was 2
+                    e_offset = 4  # vertical offset equal to 4px
                 for j in range(n_ell):
                     if isinstance(ellipse_color, (list, tuple)):
                         ellipse_color_tmp = ellipse_color[j]
@@ -693,7 +696,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                             elllabel = ellipse_label[j]
                         else:
                             elllabel = str(int(x))+','+str(int(y))
-                        ax.text(x, y + ellipse_a[j] + e_offset, elllabel,
+                        # added below - can otherwise lead to wide separations
+                        e_offset_j = min(e_offset, ellipse_a[j])
+                        ax.text(x, y + ellipse_a[j] + e_offset_j, elllabel,
                                 fontsize=label_size, color=ellipse_label_color,
                                 family='monospace', ha='center', va='center',
                                 weight='bold', alpha=ellipse_alpha[j])
@@ -985,17 +990,17 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
             # keywords in the currently active 'matplotlib' renderer are:
             # 'alpha', 'clims', 'cmap', 'filterrad', 'interpolation', 'norm',
             # 'visible'
-            #options = "Image (cmap='" + cmap + "', interpolation='nearest',"
-            #options += " clims=("+str(vmin)+','+str(vmax)+")"+")"
-            #opts(options, image_stack)
+            # options = "Image (cmap='" + cmap + "', interpolation='nearest',"
+            # options += " clims=("+str(vmin)+','+str(vmax)+")"+")"
+            # opts(options, image_stack)
             return image_stack.opts(opts.Image(colorbar=colorbar,
                                                cmap=cmap,
                                                clim=(vmin, vmax)))
             # hv.save(image_stack, 'holomap.gif', fps=5)
 
         elif backend == 'bokeh':
-            #options = "Image (cmap='" + cmap + "')"
-            #opts(options, image_stack)
+            # options = "Image (cmap='" + cmap + "')"
+            # opts(options, image_stack)
             # Compensating the width to accommodate the colorbar
             if colorbar:
                 cb_wid = 15
