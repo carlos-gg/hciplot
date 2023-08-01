@@ -1,24 +1,25 @@
-__author__ = 'Carlos Alberto Gomez Gonzalez, Valentin Christiaens'
+__author__ = 'Carlos Alberto Gomez Gonzalez, Valentin Christiaens, Iain Hammond'
 __all__ = ['plot_frames',
            'plot_cubes']
 
-from decimal import *
-import os
-import shutil
-import numpy as np
-import holoviews as hv
-from holoviews import opts
+from decimal import Decimal
+from os import mkdir
+from os.path import exists
+from shutil import rmtree
 from subprocess import call
-from matplotlib.pyplot import (figure, subplot, show, savefig, close, hlines,
-                               annotate)
+from warnings import filterwarnings
+
+import numpy as np
+from holoviews import extension, Dataset, Image, Layout, output, opts
+from matplotlib.cm import register_cmap
+from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap, Normalize
 from matplotlib.patches import Circle, Ellipse
 from matplotlib.pyplot import colorbar as plt_colorbar
+from matplotlib.pyplot import (figure, subplot, show, savefig, close, hlines,
+                               annotate)
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib.cm import register_cmap
-import matplotlib.colors as colors
-from matplotlib.colors import LinearSegmentedColormap
-import warnings
-warnings.filterwarnings("ignore", module="matplotlib")
+
+filterwarnings("ignore", module="matplotlib")
 
 # Registering heat and cool colormaps from SaoImage DS9
 # borrowed from: https://gist.github.com/adonath/c9a97d2f2d964ae7b9eb
@@ -30,7 +31,7 @@ ds9heat = {'red': lambda v: np.interp(v, [0, 0.34, 1], [0, 1, 1]),
            'blue': lambda v: np.interp(v, [0, 0.65, 0.98, 1], [0, 0, 1, 1])}
 register_cmap(cmap=LinearSegmentedColormap('ds9cool', ds9cool))
 register_cmap(cmap=LinearSegmentedColormap('ds9heat', ds9heat))
-cmap_binary = colors.ListedColormap(['black', 'white'])
+cmap_binary = ListedColormap(['black', 'white'])
 default_cmap = 'viridis'
 
 
@@ -525,7 +526,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
             raise ValueError("`mode` value was not recognized")
 
         for i, v in enumerate(range(num_plots)):
-            image = data[i].copy()
+            image = np.copy(data[i])
             frame_size = image.shape[0]  # assuming square frames
             cy = image.shape[0] / 2 - 0.5
             cx = image.shape[1] / 2 - 0.5
@@ -536,14 +537,14 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 ax.set_aspect('auto')
 
                 if logscale[i]:
-                    image += np.abs(np.nanmin(image))
-                    if vmin[i] is None:
-                        linthresh = 1e-2
-                    else:
-                        linthresh = vmin[i]
-                    norm = colors.SymLogNorm(linthresh, base=10)
+                    #image += np.abs(np.nanmin(image))  # old code to avoid negatives in image
+                    if vmax[i] is None:
+                        vmax[i] = np.nanmax(image)
+                    if vmin[i] is None or vmin[i] <= 0:
+                        vmin[i] = vmax[i] * 1e-2
+                    norm = LogNorm(vmin=vmin[i], vmax=vmax[i], clip=True)
                 else:
-                    norm = None
+                    norm = Normalize(vmin=vmin[i], vmax=vmax[i], clip=True)
 
                 if image.dtype == bool:
                     image = image.astype(int)
@@ -557,9 +558,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     cucmap = custom_cmap[i]
                     cbticks = cbar_ticks[i]
 
-                im = ax.imshow(image, cmap=cucmap, origin='lower', norm=norm,
-                               interpolation='nearest', vmin=vmin[i],
-                               vmax=vmax[i])
+                im = ax.imshow(image, cmap=cucmap, origin='lower', norm=norm, interpolation='nearest')
                 # if colorbar[i]:
                 #     divider = make_axes_locatable(ax)
                 #     # the width of cax is 5% of ax and the padding between cax
@@ -574,7 +573,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 #     cbw = 0
 
             else:
-                # Leave the import to make porjection='3d' work
+                # Leave the import to make projection='3d' work
                 #from mpl_toolkits.mplot3d import Axes3D
                 x = np.outer(np.arange(0, frame_size, 1), np.ones(frame_size))
                 y = x.copy().T
@@ -830,25 +829,25 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
             return fig, ax
 
     elif backend == 'bokeh':
-        hv.extension(backend)
+        extension(backend)
         subplots = []
         # options = "Image (cmap='" + custom_cmap[0] + "')"  # taking first item
         # hv.opts(options)
 
         for i, v in enumerate(range(num_plots)):
-            image = data[i].copy()
+            image = np.copy(data[i])
             if vmin[i] is None:
                 vmin[i] = image.min()
             if vmax[i] is None:
                 vmax[i] = image.max()
-            im = hv.Image((range(image.shape[1]), range(image.shape[0]), image))
+            im = Image((range(image.shape[1]), range(image.shape[0]), image))
             subplots.append(im.opts(tools=['hover'], colorbar=colorbar[i],
                                     colorbar_opts={'width': 15},
                                     width=width, height=height,
                                     clim=(vmin[i], vmax[i]),
                                     cmap=custom_cmap[0]))
 
-        return hv.Layout(subplots).cols(cols)
+        return Layout(subplots).cols(cols)
 
     else:
         raise ValueError('`backend` not supported')
@@ -933,11 +932,11 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
 
     Notes
     -----
-    http://holoviews.org/getting_started/Gridded_Datasets.html
-    http://holoviews.org/user_guide/Gridded_Datasets.html
-    http://holoviews.org/user_guide/Applying_Customizations.html
+    https://holoviews.org/getting_started/Gridded_Datasets.html
+    https://holoviews.org/user_guide/Gridded_Datasets.html
+    https://holoviews.org/user_guide/Applying_Customizations.html
     """
-    hv.extension(backend)
+    extension(backend)
 
     if not isinstance(cube, np.ndarray):
         raise TypeError('`cube` must be a numpy.ndarray')
@@ -956,15 +955,15 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
             # Y is a 1D array of shape N and
             # Z is a 1D array of shape O
             # Data is a ND array of shape NxMxO
-            ds = hv.Dataset((range(cube.shape[2]), range(cube.shape[1]),
-                             range(cube.shape[0]), cube), ['x', 'y', 'time'],
-                            'flux')
+            ds = Dataset((range(cube.shape[2]), range(cube.shape[1]),
+                         range(cube.shape[0]), cube), ['x', 'y', 'time'],
+                         'flux')
             max_frames = cube.shape[0]
         elif cube.ndim == 4:
             # adding a lambda dimension
-            ds = hv.Dataset((range(cube.shape[3]), range(cube.shape[2]),
-                             range(cube.shape[1]), range(cube.shape[0]), cube),
-                            ['x', 'y', 'time', 'lambda'], 'flux')
+            ds = Dataset((range(cube.shape[3]), range(cube.shape[2]),
+                        range(cube.shape[1]), range(cube.shape[0]), cube),
+                        ['x', 'y', 'time', 'lambda'], 'flux')
             max_frames = cube.shape[0] * cube.shape[1]
 
         # Matplotlib takes None but not Bokeh. We take global min & max instead
@@ -977,9 +976,9 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
         print(":Cube_shape\t{}".format(list(cube.shape[::-1])))
 
         # not working for bokeh: dpi
-        image_stack = ds.to(hv.Image, kdims=['x', 'y'], dynamic=dynamic)
-        hv.output(backend=backend, size=size, dpi=dpi, fig=figtype,
-                  max_frames=max_frames)
+        image_stack = ds.to(Image, kdims=['x', 'y'], dynamic=dynamic)
+        output(backend=backend, size=size, dpi=dpi, fig=figtype,
+               max_frames=max_frames)
 
         if backend == 'matplotlib':
             # keywords in the currently active 'matplotlib' renderer are:
@@ -1062,10 +1061,10 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
                                          label_step_range[1],
                                          label_step_range[2])
 
-        if os.path.exists(dir_path):
-            shutil.rmtree(dir_path)
+        if exists(dir_path):
+            rmtree(dir_path)
             print('Replacing ' + dir_path)
-        os.mkdir(dir_path)
+        mkdir(dir_path)
 
         print('Producing each animation frame...')
         for i, labstep in zip(data_step_range, list(label_step_range)):
@@ -1075,15 +1074,15 @@ def plot_cubes(cube, mode='slider', backend='matplotlib', dpi=100,
             plot_frames(cube[i], backend='matplotlib', mode='mosaic',
                         save=savelabel, dpi=dpi, vmin=vmin, vmax=vmax,
                         colorbar=colorbar, cmap=cmap,
-                        label=[label + str(labstep + 1)], **kwargs)
+                        label=tuple([label + str(labstep + 1)]), **kwargs)
         try:
             filename = anim_path + '.' + anim_format
             call(['convert', '-delay', str(delay), dir_path + '*.png',
                   filename])
-            if os.path.exists(filename):
+            if exists(filename):
                 print('Animation successfully saved to disk as ' + filename)
                 if delete_anim_cache:
-                    shutil.rmtree(dir_path)
+                    rmtree(dir_path)
                     print('Temp directory deleted ' + dir_path)
 
         except FileNotFoundError:
