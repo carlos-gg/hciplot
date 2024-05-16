@@ -10,18 +10,19 @@ from subprocess import call
 from warnings import filterwarnings
 
 import numpy as np
-from holoviews import extension, Dataset, Image, Layout, output, opts
-from matplotlib.cm import register_cmap
-from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap, Normalize
+import matplotlib
+from matplotlib.colors import (LinearSegmentedColormap, LogNorm, ListedColormap,
+                               Normalize)
 from matplotlib.patches import Circle, Ellipse
 from matplotlib.pyplot import colorbar as plt_colorbar
 from matplotlib.pyplot import (figure, subplot, show, savefig, close, hlines,
                                annotate)
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from holoviews import extension, Dataset, Image, Layout, output, opts
 
 filterwarnings("ignore", module="matplotlib")
 
-# Registering heat and cool colormaps from SaoImage DS9
+# Registering heat and cool colormaps from SAOImage DS9
 # borrowed from: https://gist.github.com/adonath/c9a97d2f2d964ae7b9eb
 ds9cool = {'red': lambda v: 2 * v - 1,
            'green': lambda v: 2 * v - 0.5,
@@ -29,8 +30,8 @@ ds9cool = {'red': lambda v: 2 * v - 1,
 ds9heat = {'red': lambda v: np.interp(v, [0, 0.34, 1], [0, 1, 1]),
            'green': lambda v: np.interp(v, [0, 1], [0, 1]),
            'blue': lambda v: np.interp(v, [0, 0.65, 0.98, 1], [0, 0, 1, 1])}
-register_cmap(cmap=LinearSegmentedColormap('ds9cool', ds9cool))
-register_cmap(cmap=LinearSegmentedColormap('ds9heat', ds9heat))
+matplotlib.colormaps.register(cmap=LinearSegmentedColormap(name='ds9cool', segmentdata=ds9cool))
+matplotlib.colormaps.register(cmap=LinearSegmentedColormap(name='ds9heat', segmentdata=ds9heat))
 cmap_binary = ListedColormap(['black', 'white'])
 default_cmap = 'viridis'
 
