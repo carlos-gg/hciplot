@@ -43,13 +43,15 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 ellipse_color='white', ellipse_linestyle='-', ellipse_a=6,
                 ellipse_b=4, ellipse_angle=0, ellipse_label=False,
                 ellipse_label_color='white', arrow=None, arrow_alpha=0.8,
-                arrow_length=10, arrow_shiftx=5, arrow_label=None, label=None,
-                label_pad=5, label_size=12, label_color='white', grid=False,
-                grid_alpha=0.4,  grid_color='#f7f7f7', grid_spacing=None,
-                cross=None, cross_alpha=0.4, lab_fontsize=8, cross_color='white',
-                ang_scale=False, ang_ticksep=50, tick_direction='out',
-                tick_color='black', ndec=1, pxscale=0.01, auscale=1.,
-                ang_legend=False, au_legend=False, axis=True,
+                arrow_length=10, arrow_shiftx=5, arrow_label=None,
+                arrow_color='white', arrow_head_width=6, arrow_head_length=4,
+                arrow_width=2, label=None, label_pad=5, label_size=12,
+                label_color='white', grid=False, grid_alpha=0.4,
+                grid_color='#f7f7f7', grid_spacing=None, cross=None,
+                cross_alpha=0.4, lab_fontsize=8, cross_color='white',
+                ang_scale=False, ang_ticksep=50, ang_ticksep_minor=None,
+                tick_direction='out', tick_color='black', ndec=1, pxscale=0.01,
+                auscale=1., ang_legend=False, au_legend=False, axis=True,
                 show_center=False, cmap=None, log=False, colorbar=True,
                 top_colorbar=False, colorbar_ticks=None, colorbar_ticksize=8,
                 colorbar_label='', colorbar_label_size=8, patch=None, dpi=100,
@@ -65,7 +67,7 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
     Parameters
     ----------
-    data : numpy.ndarray or tuple
+    data : 2d numpy.ndarray, or tuple/list of 2d numpy.ndarray
         A single 2d array or a tuple of 2d arrays.
     backend : {'matplotlib', 'bokeh'}, str optional
         Selects the backend used to display the plots. ``Matplotlib`` plots
@@ -162,9 +164,13 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
     ang_scale : bool or tuple of bools, optional
         [backend='matplotlib'] If True, the axes are displayed in angular scale
         (arcsecs).
-    ang_ticksep : int, optional
+    ang_ticksep : float, optional
         [backend='matplotlib'] Separation for the ticks in pixels, when using
         axis in angular scale.
+    ang_ticksep_minor : float, optional
+        [backend='matplotlib'] Separation for the minor ticks in pixels, when
+        using axis in angular scale. If not provided, will be determined
+        automatically by matplotlib.
     tick_direction : str, optional
         [backend='matplotlib'] Outward or inward facing axis ticks.
         'in' for inward, 'out' for outwards.
@@ -227,8 +233,9 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         [backend='bokeh'] Controls the width of each subplot.
     height : int, optional
         [backend='bokeh'] Controls the height of each subplot.
-    title : None or str, optional
-        [backend='matplotlib'] Title of the whole figure, None by default.
+    title : None or str or tuple of str, optional
+        [backend='matplotlib'] Title of the whole figure, or of each subfigure.
+        None by default.
     tit_size: int, optional
         Size of the title font.
     sampling : int, optional
@@ -516,10 +523,17 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
         fig = figure(figsize=(cols * size_factor, rows * size_factor), dpi=dpi)
 
         if title is not None:
-            fig.suptitle(title, fontsize=tit_size, va='center', x=0.51,
-                         # y=1-0.08*(28/tit_size)**(0.5))
-                         y=1-0.1*(16/tit_size))
-
+            if not isinstance(title, (tuple, list)):
+                do_subtitle = False
+                fig.suptitle(title, fontsize=tit_size, va='center', x=0.51,
+                             # y=1-0.08*(28/tit_size)**(0.5))
+                             y=1-0.1*(16/tit_size))
+            elif len(title) == num_plots:
+                do_subtitle = True
+            else:
+                raise ValueError("Format of provided title not recognized.")
+        else:
+            do_subtitle = False
         if mode == 'surface':
             plot_mosaic = False
         elif mode == 'mosaic':
@@ -562,6 +576,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
                 im = ax.imshow(image, cmap=cucmap, origin='lower',
                                norm=norm, interpolation='nearest')
+                if do_subtitle:
+                    ax.set_title(title[i])
                 # if colorbar[i]:
                 #     divider = make_axes_locatable(ax)
                 #     # the width of cax is 5% of ax and the padding between cax
@@ -589,8 +605,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 ax.set_xlabel('x')
                 ax.set_ylabel('y')
                 ax.dist = 10
-                if title is not None:
-                    ax.set_title(title)
+                if do_subtitle:
+                    ax.set_title(title[i])
 
                 if colorbar[i]:
                     fig.colorbar(surf, aspect=10, pad=0.05, fraction=0.04)
@@ -705,9 +721,11 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                                 weight='bold', alpha=ellipse_alpha[j])
 
             if show_cross and plot_mosaic:
-                ax.axhline(coor_cross[0], xmin=0, xmax=frame_size, alpha=cross_alpha, lw=0.6,
+                ax.axhline(coor_cross[0], xmin=0, xmax=frame_size,
+                           alpha=cross_alpha, lw=0.6,
                            linestyle='dashed', color='white')
-                ax.axvline(coor_cross[1], ymin=0, ymax=frame_size, alpha=cross_alpha, lw=0.6,
+                ax.axvline(coor_cross[1], ymin=0, ymax=frame_size,
+                           alpha=cross_alpha, lw=0.6,
                            linestyle='dashed', color='white')
 
             if show_center[i] and plot_mosaic:
@@ -716,9 +734,10 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
 
             if show_arrow and plot_mosaic:
                 ax.arrow(arrow[0] + arrow_length + arrow_shiftx, arrow[1],
-                         -arrow_length, 0, color='white', head_width=6,
-                         head_length=4, width=2, length_includes_head=True,
-                         alpha=arrow_alpha)
+                         -arrow_length, 0, color=arrow_color,
+                         head_width=arrow_head_width,
+                         head_length=arrow_head_length, width=arrow_width,
+                         length_includes_head=True, alpha=arrow_alpha)
                 if arrow_label:
                     x = arrow[0]
                     y = arrow[1]
@@ -732,14 +751,63 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                         arr_fontsize = lab_fontsize
 
                     ax.text(x + arrow_length + 1.3*arrow_shiftx, y, arrlabel,
-                            fontsize=arr_fontsize, color='white', family='monospace',
-                            ha='left', va='center', weight='bold',
-                            alpha=arrow_alpha)
+                            fontsize=arr_fontsize, color='white',
+                            family='monospace', ha='left', va='center',
+                            weight='bold', alpha=arrow_alpha)
 
             if label[i] is not None and plot_mosaic:
-                ax.annotate(label[i], xy=(label_pad_x, label_pad_y), color=label_color[i],
-                            xycoords='axes pixels', weight='bold',
-                            size=label_size)
+                ax.annotate(label[i], xy=(label_pad_x, label_pad_y),
+                            color=label_color[i], xycoords='axes pixels',
+                            weight='bold', size=label_size)
+
+            if ang_scale[i] and plot_mosaic:
+                # Converting axes from pixels to arcseconds
+                half_num_ticks = int(np.round(cy // ang_ticksep))
+
+                # Corresponding distance in arcseconds, measured from the center
+                labels_y = []
+                labels_x = []
+                for t in range(half_num_ticks, -half_num_ticks-1, -1):
+                    labels_y.append(
+                        round(Decimal(-t * (ang_ticksep * pxscale)), ndec))
+                    labels_x.append(
+                        round(Decimal(t * (ang_ticksep * pxscale)), ndec))
+
+                # Calculate the pixel locations at which to put ticks
+                ticks = []
+                for t in range(half_num_ticks, -half_num_ticks-1, -1):
+                    # Avoid ticks not showing on the last pixel
+                    if not cy - t * ang_ticksep == frame_size:
+                        ticks.append(cy - t * ang_ticksep)
+                    else:
+                        ticks.append((cy - t * ang_ticksep)-1)
+                ax.set_xticks(ticks)
+                ax.set_yticks(ticks)
+                ax.set_xticklabels(labels_x)
+                ax.set_yticklabels(labels_y)
+                ax.set_xlabel('\u0394RA ["]', fontsize=label_size)
+                ax.set_ylabel('\u0394Dec ["]', fontsize=label_size)
+
+                if ang_ticksep_minor is None:
+                    ax.minorticks_on()
+                else:
+                    # minor ticks
+                    half_num_ticks = int(np.round(cy // ang_ticksep_minor))
+                    minor_ticks = []
+                    for t in range(half_num_ticks, -half_num_ticks-1, -1):
+                        # Avoid ticks not showing on the last pixel
+                        if not cy - t * ang_ticksep_minor == frame_size:
+                            minor_ticks.append(cy - t * ang_ticksep_minor)
+                        else:
+                            minor_ticks.append((cy - t * ang_ticksep_minor)-1)
+                    ax.set_xticks(minor_ticks, minor=True)
+                    ax.set_yticks(minor_ticks, minor=True)
+                ax.tick_params(axis='both', which='both', labelsize=label_size,
+                               direction=tick_direction, color=tick_color)
+
+            else:
+                ax.set_xlabel("x", fontsize=label_size)
+                ax.set_ylabel("y", fontsize=label_size)
 
             if grid[i] and plot_mosaic:
                 if grid_spacing[i] is None:
@@ -754,48 +822,14 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                     gridspa = grid_spacing[i]
 
                 ax.tick_params(axis='both', which='minor')
-                minor_ticks = np.arange(0, data[i].shape[0], gridspa)
-                ax.set_xticks(minor_ticks, minor=True)
-                ax.set_yticks(minor_ticks, minor=True)
+                if ang_ticksep_minor is None:
+                    minor_ticks = np.arange(0, data[i].shape[0], gridspa)
+                    ax.set_xticks(minor_ticks, minor=True)
+                    ax.set_yticks(minor_ticks, minor=True)
                 ax.grid(True, which='minor', color=grid_color[i], linewidth=0.5,
                         alpha=grid_alpha[i], linestyle='dashed')
             else:
                 ax.grid(False)
-
-            if ang_scale[i] and plot_mosaic:
-                # Converting axes from pixels to arcseconds
-                half_num_ticks = int(np.round(cy // ang_ticksep))
-
-                # Calculate the pixel locations at which to put ticks
-                ticks = []
-                for t in range(half_num_ticks, -half_num_ticks-1, -1):
-                    # Avoid ticks not showing on the last pixel
-                    if not cy - t * ang_ticksep == frame_size:
-                        ticks.append(cy - t * ang_ticksep)
-                    else:
-                        ticks.append((cy - t * ang_ticksep)-1)
-                ax.set_xticks(ticks)
-                ax.set_yticks(ticks)
-
-                # Corresponding distance in arcseconds, measured from the center
-                labels_y = []
-                labels_x = []
-                for t in range(half_num_ticks, -half_num_ticks-1, -1):
-                    labels_y.append(
-                        round(Decimal(-t * (ang_ticksep * pxscale)), ndec))
-                    labels_x.append(
-                        round(Decimal(t * (ang_ticksep * pxscale)), ndec))
-                ax.set_xticklabels(labels_x)
-                ax.set_yticklabels(labels_y)
-                ax.set_xlabel('\u0394RA ["]', fontsize=label_size)
-                ax.set_ylabel('\u0394Dec ["]', fontsize=label_size)
-                ax.minorticks_on()
-                ax.tick_params(axis='both', which='both', labelsize=label_size,
-                               direction=tick_direction, color=tick_color)
-
-            else:
-                ax.set_xlabel("x", fontsize=label_size)
-                ax.set_ylabel("y", fontsize=label_size)
 
             if not axis[i]:
                 ax.set_axis_off()
@@ -807,7 +841,8 @@ def plot_frames(data, backend='matplotlib', mode='mosaic', rows=1, vmax=None,
                 if top_colorbar:
                     cax = divider.append_axes("top", size="5%", pad=0.05)
                     cb = plt_colorbar(
-                        im, ax=ax, cax=cax, drawedges=False, ticks=cbticks, orientation='horizontal')
+                        im, ax=ax, cax=cax, drawedges=False, ticks=cbticks,
+                        orientation='horizontal')
                     cb.ax.xaxis.set_ticks_position('top')
                     cb.ax.xaxis.set_label_position('top')
                 else:
